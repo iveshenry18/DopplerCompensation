@@ -13,7 +13,7 @@ include(PamplejuceMacOS)
 # This is the internal name of the project and the name of JUCE's shared code target
 # Note: This cannot have spaces (it may be 2024, but you can't have it all!)
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs display)
-set(PROJECT_NAME "APiCppProject")
+set(PROJECT_NAME "DopplerCompensation")
 
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs will display)
 # You can also just have it be the same thing as PROJECT_NAME
@@ -21,13 +21,13 @@ set(PROJECT_NAME "APiCppProject")
 #   set(PROJECT_NAME "MyPlugin_v${MAJOR_VERSION}")
 # Doing so enables major versions to show up in IDEs and DAWs as separate plugins
 # allowing you to change parameters and behavior without breaking existing user projects
-set(PRODUCT_NAME "APiCpp Project")
+set(PRODUCT_NAME "Doppler Compensation")
 
 # Change me! Used for the MacOS bundle name and Installers
 set(COMPANY_NAME "Henry Ives")
 
 # Change me! Used for the MacOS bundle identifier (and signing)
-set(BUNDLE_ID "com.henryives.apicppproject")
+set(BUNDLE_ID "com.henryives.dopplercompensation")
 
 # Change me! Set the plugin formats you want built
 # Valid choices: AAX Unity VST VST3 AU AUv3 Standalone
@@ -66,12 +66,12 @@ juce_add_plugin("${PROJECT_NAME}"
     # Change me!
     # A four-character plugin id
     # First character MUST be uppercase for AU formats
-    PLUGIN_MANUFACTURER_CODE APWT
+    PLUGIN_MANUFACTURER_CODE DPLC
 
     # Change me!
     # A unique four-character plugin id
     # Note: this must have at least one upper-case character
-    PLUGIN_CODE APCP
+    PLUGIN_CODE DPLC
     FORMATS "${FORMATS}"
 
     # The name of your final executable
@@ -81,9 +81,9 @@ juce_add_plugin("${PROJECT_NAME}"
     PRODUCT_NAME "${PRODUCT_NAME}"
 
     # Custom JUCE Settings
-    IS_MIDI_EFFECT TRUE
-    NEEDS_MIDI_INPUT TRUE
-    NEEDS_MIDI_OUTPUT TRUE
+    IS_MIDI_EFFECT FALSE
+    NEEDS_MIDI_INPUT FALSE
+    NEEDS_MIDI_OUTPUT FALSE
 )
 
 # This lets us use our code in both the JUCE targets and our Test target
