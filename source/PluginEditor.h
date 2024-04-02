@@ -16,7 +16,7 @@ typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
 //==============================================================================
 /**
 */
-class PluginEditor : public juce::AudioProcessorEditor, public juce::AudioProcessorValueTreeState::Listener
+class PluginEditor : public juce::AudioProcessorEditor
 {
 public:
     PluginEditor (PluginProcessor&);
@@ -26,24 +26,23 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    void parameterChanged (const juce::String& parameterID, float newValue) override;
-
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     PluginProcessor& audioProcessor;
-    void updateTimeBaseAttachment();
 
-    juce::Slider mBasisNoteSlider;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mBasisNoteSliderAttachment;
-    juce::Label mBasisNoteLabel;
-    juce::Slider mTimeBaseSlider;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mTimeBaseSliderAttachment;
-    juce::Label mTimeBaseLabel;
-    juce::ToggleButton mSyncTimeToggle;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> mSyncTimeToggleAttachment;
-    juce::ToggleButton mLearnBasisNoteToggle;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> mLearnBasisNoteToggleAttachment;
+    juce::Slider mDiameterSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mDiameterSliderAttachment;
+    juce::Label mDiameterLabel;
+    juce::Slider mDistanceToFocalPointSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mDistanceToFocalPointSliderAttachment;
+    juce::Label mDistanceToFocalPointLabel;
+    juce::Slider mSpinRateSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mSpinRateSliderAttachment;
+    juce::Label mSpinRateLabel;
+    juce::Slider mPhaseSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mPhaseSliderAttachment;
+    juce::Label mPhaseLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

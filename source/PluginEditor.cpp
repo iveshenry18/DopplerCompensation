@@ -15,84 +15,74 @@
 PluginEditor::PluginEditor (PluginProcessor& parent)
     : AudioProcessorEditor (&parent), audioProcessor (parent)
 {
-    mBasisNoteSlider.setRange (0, 127);
-    mBasisNoteSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
-    mBasisNoteSlider.setTitle ("Basis Note");
-    mBasisNoteSlider.setHelpText ("This is the note that will play at the Time Base");
-    mBasisNoteSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
-    mBasisNoteSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
+    mDiameterSlider.setRange (0, 5);
+    mDiameterSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
+    mDiameterSlider.setTextBoxIsEditable (true);
+    mDiameterSlider.setTitle ("Diameter (m)");
+    mDiameterSlider.setHelpText ("This is the diameter of the spinner in meters");
+    mDiameterSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
+    mDiameterSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
         audioProcessor.getVTS(),
-        "basis_note",
-        mBasisNoteSlider));
+        "diameter",
+        mDiameterSlider));
+    mDiameterLabel.setText ("Diameter (m)", juce::dontSendNotification);
+    mDiameterLabel.setJustificationType (juce::Justification::centred);
 
-    mBasisNoteLabel.setText ("Basis Note", juce::dontSendNotification);
-    mBasisNoteLabel.setJustificationType (juce::Justification::centred);
-
-    mTimeBaseSlider.setRange (0, 5000);
-    mTimeBaseSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
-    mTimeBaseSlider.setTitle ("Time Base");
-    mTimeBaseSlider.setHelpText ("This is the time value of the basis note");
-    mTimeBaseSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
-
-    mTimeBaseLabel.setText ("Time Base", juce::dontSendNotification);
-    mTimeBaseLabel.setJustificationType (juce::Justification::centred);
-
-    mSyncTimeToggle.setClickingTogglesState (true);
-    mSyncTimeToggle.setButtonText ("Sync");
-    mSyncTimeToggle.setHelpText ("Whether the Time Base should be an absolute value (ms) or a rhythmic value");
-    mSyncTimeToggleAttachment.reset (new juce::AudioProcessorValueTreeState::ButtonAttachment (
+    mDistanceToFocalPointSlider.setRange (0, 10);
+    mDistanceToFocalPointSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
+    mDistanceToFocalPointSlider.setTextBoxIsEditable (true);
+    mDistanceToFocalPointSlider.setTitle ("Distance to Focal Point (m)");
+    mDistanceToFocalPointSlider.setHelpText ("This is the distance to the focal point in meters");
+    mDistanceToFocalPointSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
+    mDistanceToFocalPointSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
         audioProcessor.getVTS(),
-        "sync_time",
-        mSyncTimeToggle));
+        "distance_to_focal_point",
+        mDistanceToFocalPointSlider));
+    mDistanceToFocalPointLabel.setText ("Distance to Focal Point (m)", juce::dontSendNotification);
+    mDistanceToFocalPointLabel.setJustificationType (juce::Justification::centred);
 
-    mLearnBasisNoteToggle.setClickingTogglesState (true);
-    mLearnBasisNoteToggle.setButtonText ("Learn");
-    mLearnBasisNoteToggle.setHelpText ("Learn the Basis Note");
-    mLearnBasisNoteToggleAttachment.reset (new juce::AudioProcessorValueTreeState::ButtonAttachment (
+    mSpinRateSlider.setRange (0, 10);
+    mSpinRateSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
+    mSpinRateSlider.setTextBoxIsEditable (true);
+    mSpinRateSlider.setTitle ("Spin Rate (rps)");
+    mSpinRateSlider.setHelpText ("This is the rate of the spinner in rotations per second");
+    mSpinRateSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
+    mSpinRateSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
         audioProcessor.getVTS(),
-        "learn_basis",
-        mLearnBasisNoteToggle));
+        "spin_rate",
+        mSpinRateSlider));
 
-    updateTimeBaseAttachment();
-    addAndMakeVisible (mBasisNoteSlider);
-    addAndMakeVisible (mTimeBaseSlider);
-    addAndMakeVisible (mLearnBasisNoteToggle);
-    addAndMakeVisible (mSyncTimeToggle);
-    addAndMakeVisible (mTimeBaseLabel);
-    addAndMakeVisible (mBasisNoteLabel);
+    mSpinRateLabel.setText ("Spin Rate (rps)", juce::dontSendNotification);
+    mSpinRateLabel.setJustificationType (juce::Justification::centred);
+
+    mPhaseSlider.setRange (0, 100);
+    mPhaseSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
+    mPhaseSlider.setTextBoxIsEditable (true);
+    mPhaseSlider.setTitle ("Phase (%)");
+    mPhaseSlider.setHelpText ("This is the Phase of the spinner. Use it to rotate the focal point.");
+    mPhaseSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
+    mPhaseSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
+        audioProcessor.getVTS(),
+        "phase",
+        mPhaseSlider));
+
+    mPhaseLabel.setText ("Phase (%)", juce::dontSendNotification);
+    mPhaseLabel.setJustificationType (juce::Justification::centred);
+
+    addAndMakeVisible (mDiameterSlider);
+    addAndMakeVisible (mDiameterLabel);
+    addAndMakeVisible (mDistanceToFocalPointSlider);
+    addAndMakeVisible (mDistanceToFocalPointLabel);
+    addAndMakeVisible (mSpinRateSlider);
+    addAndMakeVisible (mSpinRateLabel);
+    addAndMakeVisible (mPhaseSlider);
+    addAndMakeVisible (mPhaseLabel);
 
     setSize (500, 300);
 }
 
-void PluginEditor::updateTimeBaseAttachment()
-{
-    // This feels like a hack but it does work
-    mTimeBaseSliderAttachment = nullptr;
-    if (mSyncTimeToggle.getToggleState())
-    {
-        mTimeBaseSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
-            audioProcessor.getVTS(),
-            "time_base_sync",
-            mTimeBaseSlider));
-    }
-    else
-    {
-        mTimeBaseSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
-            audioProcessor.getVTS(),
-            "time_base_ms",
-            mTimeBaseSlider));
-    }
-}
-
 PluginEditor::~PluginEditor() = default;
 
-void PluginEditor::parameterChanged (const juce::String& parameterID, float newValue)
-{
-    if (parameterID == "sync_time")
-    {
-        updateTimeBaseAttachment();
-    }
-}
 //==============================================================================
 void PluginEditor::paint (juce::Graphics& g)
 {
@@ -103,14 +93,16 @@ void PluginEditor::paint (juce::Graphics& g)
 void PluginEditor::resized()
 {
     auto bounds = getLocalBounds();
-    auto knob_area = bounds.removeFromTop (getHeight() * .7);
-    auto label_area = bounds.removeFromTop (getHeight() * .3);
+    auto knob_area = bounds.removeFromTop (int (getHeight() * .7));
+    auto label_area = bounds.removeFromTop (int (getHeight() * .3));
 
-    mBasisNoteSlider.setBounds (knob_area.removeFromLeft (3 * getWidth() / 10));
-    mLearnBasisNoteToggle.setBounds (knob_area.removeFromLeft (getWidth() / 5).removeFromTop (knob_area.getHeight() / 2));
-    mTimeBaseSlider.setBounds (knob_area.removeFromLeft (3 * getWidth() / 10));
-    mSyncTimeToggle.setBounds (knob_area.removeFromLeft (getWidth() / 5).removeFromTop (knob_area.getHeight() / 2));
+    mDiameterSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
+    mDistanceToFocalPointSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
+    mSpinRateSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
+    mPhaseSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
 
-    mBasisNoteLabel.setBounds (label_area.removeFromLeft (3 * getWidth() / 10));
-    mTimeBaseLabel.setBounds (label_area.removeFromRight (getWidth() / 2).removeFromLeft (3 * getWidth() / 10));
+    mDiameterLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
+    mDistanceToFocalPointLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
+    mSpinRateLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
+    mPhaseLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
 }

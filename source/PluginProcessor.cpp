@@ -20,22 +20,19 @@ PluginProcessor::PluginProcessor() :
         #endif
                                                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
     #endif
-                                             ),
+                                     )
 #endif
-                                     syncManager (this)
 {
     _constructValueTreeStates();
 
-    mBasisNote = dynamic_cast<juce::AudioParameterInt*> (mValueTreeState->getParameter ("basis_note"));
-    jassert (mBasisNote != nullptr);
-    mTimeBaseMs = dynamic_cast<juce::AudioParameterInt*> (mValueTreeState->getParameter ("time_base_ms"));
-    jassert (mTimeBaseMs != nullptr);
-    mTimeBaseSync = dynamic_cast<juce::AudioParameterInt*> (mValueTreeState->getParameter ("time_base_sync"));
-    jassert (mTimeBaseSync != nullptr);
-    mSyncTime = dynamic_cast<juce::AudioParameterBool*> (mValueTreeState->getParameter ("sync_time"));
-    jassert (mSyncTime != nullptr);
-    mLearnBasis = dynamic_cast<juce::AudioParameterBool*> (mValueTreeState->getParameter ("learn_basis"));
-    jassert (mLearnBasis != nullptr);
+    mDiameter = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("diameter"));
+    jassert (mDiameter != nullptr);
+    mDistanceToFocalPoint = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("distance_to_focal_point"));
+    jassert (mDistanceToFocalPoint != nullptr);
+    mSpinRate = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("diameter"));
+    jassert (mSpinRate != nullptr);
+    mDiameter = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("diameter"));
+    jassert (mDiameter != nullptr);
 }
 
 PluginProcessor::~PluginProcessor() = default;
@@ -46,91 +43,19 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     mSampleRate = sampleRate;
     mSamplesPerBlock = samplesPerBlock;
     mTimeInSamples = 0;
-    syncManager.updateSampleRate();
 }
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     int64_t bufferStartTimeSamples = getPlayHead()->getPosition()->getTimeInSamples().orFallback (mTimeInSamples);
-    syncManager.updateCurrentPositionInfo();
 
-    std::map<ChannelAndNoteNumber, MidiWithStart> notesToDelete;
-    bool allNotesOff = false;
+    //    // Compute Delay Time
+    //    float speakerXPos = sin(spinPhasePos);
+    //    float speakerYPos = sin(spinPhasePos);
 
-    // Populate heldMidiNotes and note to learn
-    std::optional<juce::MidiMessageMetadata> latestMessage;
-    for (auto message : midiMessages)
-    {
-        auto messageData = message.getMessage();
-        auto absoluteSamplePosition = message.samplePosition + bufferStartTimeSamples;
-        if (messageData.isNoteOn())
-        {
-            if (mLearnBasis->get() && (!latestMessage.has_value() || message.samplePosition > latestMessage.value().samplePosition))
-            {
-                latestMessage = message;
-            }
-            heldMidiNotes.insert ({ { messageData.getChannel(), messageData.getNoteNumber() }, { messageData, absoluteSamplePosition } });
-        }
-        else if (messageData.isNoteOff())
-        {
-            notesToDelete.insert ({ { messageData.getChannel(), messageData.getNoteNumber() }, { messageData, absoluteSamplePosition } });
-        }
-        else if (messageData.isAllNotesOff())
-        {
-            allNotesOff = true;
-        }
-    }
+    // Adjust Delay Time
 
-    if (mLearnBasis->get() && latestMessage.has_value())
-    {
-        *mBasisNote = latestMessage.value().getMessage().getNoteNumber();
-    }
-
-    /**
-     * Compute new retrigs.
-     */
-    for (auto& heldNote : heldMidiNotes)
-    {
-        int noteNumber = heldNote.first.second;
-        int retrigTime = static_cast<int> (getRetrigTimeSamples (noteNumber));
-        int64_t timeSinceLastTrig = heldNote.second.absoluteSamplePosition - bufferStartTimeSamples;
-
-        int writeHead = (static_cast<int> (timeSinceLastTrig) % retrigTime);
-        // If the given note ends in this window, only write new notes up to where it cuts off
-        int64_t writeWindow = notesToDelete.contains (heldNote.first) ? notesToDelete.at (heldNote.first).absoluteSamplePosition - bufferStartTimeSamples - 1 : mSamplesPerBlock;
-
-        while (writeHead <= writeWindow)
-        {
-            // Edge case: on/off falls exactly on block boundary
-            if (writeHead == mSamplesPerBlock)
-            {
-                midiMessages.addEvent (juce::MidiMessage::noteOff (heldNote.first.first, heldNote.first.second), writeHead - 1);
-            }
-            else if (writeHead == 0)
-            {
-                midiMessages.addEvent (heldNote.second.midiMessage, writeHead);
-                heldNote.second.absoluteSamplePosition = writeHead + bufferStartTimeSamples;
-            }
-            // Normal case
-            else if (writeHead > 0)
-            {
-                midiMessages.addEvent (juce::MidiMessage::noteOff (heldNote.first.first, heldNote.first.second), writeHead - 1);
-                midiMessages.addEvent (heldNote.second.midiMessage, writeHead);
-                heldNote.second.absoluteSamplePosition = writeHead + bufferStartTimeSamples;
-            }
-            writeHead += retrigTime;
-        }
-    }
-
-    // Erase deleted notes
-    for (const auto& noteToDelete : notesToDelete)
-    {
-        heldMidiNotes.erase (noteToDelete.first);
-    }
-    if (allNotesOff)
-    {
-        heldMidiNotes.clear();
-    }
+    // Run Delay
 
     // Update current time (if host doesn't provide time)
     mTimeInSamples += mSamplesPerBlock;
@@ -239,7 +164,6 @@ bool PluginProcessor::hasEditor() const
 juce::AudioProcessorEditor* PluginProcessor::createEditor()
 {
     auto editor = new PluginEditor (*this);
-    mValueTreeState->addParameterListener ("sync_time", editor);
     return editor;
 }
 
@@ -265,38 +189,6 @@ void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
             mValueTreeState->replaceState (juce::ValueTree::fromXml (*xmlState));
 }
 
-float PluginProcessor::computeBasisNoteSamples() const
-{
-    if (mSyncTime->get())
-    {
-        return (syncManager.getTimeDivisionSamples (static_cast<u_long> (mTimeBaseSync->get())));
-    }
-    else
-    {
-        return static_cast<float> ((static_cast<float> (mTimeBaseMs->get()) / 1000.f) * mSampleRate);
-    }
-}
-
-double PluginProcessor::getRetrigTimeSamples (int noteNumber) const
-{
-    int basisNote = mBasisNote->get();
-    auto basisNoteSamples = computeBasisNoteSamples();
-
-    int deltaWithBasis = noteNumber - basisNote;
-    int octaveDelta = deltaWithBasis / 12;
-    int pitchClassDelta = deltaWithBasis % 12;
-    if (pitchClassDelta < 0)
-    {
-        octaveDelta -= 1;
-        pitchClassDelta += 12;
-    }
-    Fraction pitchClassRatio = PITCH_RATIOS.at (pitchClassDelta);
-
-    float pitchRatioFromBasis = pitchClassRatio * (static_cast<const float> (pow (2, octaveDelta)));
-
-    return basisNoteSamples / pitchRatioFromBasis;
-}
-
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
@@ -305,35 +197,34 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 void PluginProcessor::_constructValueTreeStates()
 {
-    mValueTreeState.reset (new juce::AudioProcessorValueTreeState (*this, nullptr, juce::Identifier ("APiCppProjParams"),
+    mValueTreeState.reset (new juce::AudioProcessorValueTreeState (*this, nullptr, juce::Identifier ("DopplerCompensationParams"),
 
-        {
-            std::make_unique<juce::AudioParameterInt> (juce::ParameterID ("basis_note", 1), // parameterID
-                "Basis Note", // parameter name
-                0, // minimum value
-                127, // maximum value
-                60, // default value
-                juce::AudioParameterIntAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
-                    return getNoteFromMidiNumber (v1);
+        { std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("diameter", 1), // parameterID
+              "Diameter (m)", // parameter name
+              juce::NormalisableRange<float> (0, 5),
+              1,
+              juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                  return std::to_string (v1) + " m";
+              })),
+            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("distance_to_focal_point", 1), // parameterID
+                "Distance to Focal Point (m)", // parameter name
+                juce::NormalisableRange<float> (0, 10),
+                2,
+                juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                    return std::to_string (v1) + " m";
                 })),
-
-            std::make_unique<juce::AudioParameterInt> (juce::ParameterID ("time_base_ms", 1), // parameterID
-                "Time Base (ms)", // parameter name
-                50, // minimum value
-                5000, // maximum value
-                500,
-                juce::AudioParameterIntAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
-                    return std::to_string (v1) + " ms";
+            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spin_rate", 1), // parameterID
+                "Spin Rate (rps)", // parameter name
+                juce::NormalisableRange<float> (0, 10),
+                1,
+                juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                    return std::to_string (v1) + " rps";
                 })), // default value
-            std::make_unique<juce::AudioParameterInt> (juce::ParameterID ("time_base_sync", 1), // parameterID
-                "Time Base (sync)", // parameter name
-                0, // minimum value
-                TIME_DIVISIONS.size() - 1, // maximum value
-                QUARTER_NOTE_INDEX,
-                juce::AudioParameterIntAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
-                    return TIME_DIVISIONS.at (static_cast<unsigned long> (v1)).timeDivisionString;
-                })),
-            std::make_unique<juce::AudioParameterBool> (juce::ParameterID ("learn_basis", 1), "Learn Basis", false),
-            std::make_unique<juce::AudioParameterBool> (juce::ParameterID ("sync_time", 1), "Sync Time", false),
-        }));
+            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("phase", 1), // parameterID
+                "Phase (%)", // parameter name
+                juce::NormalisableRange<float> (0, 100),
+                0,
+                juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                    return std::to_string (v1) + " %";
+                })) }));
 }

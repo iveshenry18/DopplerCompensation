@@ -10,25 +10,10 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
-#include "Fraction.h"
-#include "PitchManager.h"
 #include "SyncManager.h"
 #include <utility>
 
-using ChannelAndNoteNumber = std::pair<int, int>;
-
-struct MidiWithStart
-{
-    juce::MidiMessage midiMessage;
-    int64_t absoluteSamplePosition;
-
-    MidiWithStart (juce::MidiMessage message, int64_t sample) : midiMessage (std::move (message)), absoluteSamplePosition (sample) {}
-};
-
-union TimeBase {
-    float ms;
-    Fraction time;
-};
+const float SPEED_OF_SOUND_MS = 343;
 
 //==============================================================================
 /**
@@ -85,25 +70,15 @@ private:
     double mSampleRate = 44100;
     // If the host doesn't provide transport info, we need to keep track of sample time ourselves
     int mSamplesPerBlock = 512;
+
     // Just so you know at 44.1kHz this will overflow if the program runs for 6.6 million years.
     // It also happens to be exactly how the playhead behaves in standalone mode
-    SyncManager syncManager;
-
     int64_t mTimeInSamples = 0;
 
-    juce::AudioParameterInt* mBasisNote = nullptr;
-    // In Minimal Audio's codebase, Jake wraps parameters, so they can have multiple range objects
-    juce::AudioParameterInt* mTimeBaseMs = nullptr;
-    juce::AudioParameterInt* mTimeBaseSync = nullptr;
-    juce::AudioParameterBool* mLearnBasis = nullptr;
-    juce::AudioParameterBool* mSyncTime = nullptr;
-
-    /**
-     * (channel, noteNumber) -> midiMessage
-     */
-    std::map<ChannelAndNoteNumber, MidiWithStart> heldMidiNotes;
-    double getRetrigTimeSamples (int number) const;
-    float computeBasisNoteSamples() const;
+    juce::AudioParameterFloat* mDiameter = nullptr;
+    juce::AudioParameterFloat* mDistanceToFocalPoint = nullptr;
+    juce::AudioParameterFloat* mSpinRate = nullptr;
+    juce::AudioParameterFloat* mPhase = nullptr;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
     void _constructValueTreeStates();
