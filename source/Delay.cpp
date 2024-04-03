@@ -76,8 +76,8 @@ void Delay::processBlock(juce::AudioBuffer<float>& inBuffer) {
  * @param inDryWetPercent [0, 1]
  */
 void Delay::setParameters(float inDelayTimeSeconds, float inFeedbackPercent, float inDryWetPercent) {
-    mSmoothedDryWet.setTargetValue(inDryWetPercent);
-    mSmoothedDryWet.setTargetValue(inDryWetPercent);
+    mSmoothedTime.setTargetValue(inDelayTimeSeconds);
+    mSmoothedFeedback.setTargetValue(inDryWetPercent);
     mSmoothedDryWet.setTargetValue(inDryWetPercent);
 }
 
