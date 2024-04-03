@@ -40,22 +40,37 @@ PluginProcessor::~PluginProcessor() = default;
 //==============================================================================
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    mSampleRate = sampleRate;
+    mSampleRate = static_cast<float> (sampleRate);
     mSamplesPerBlock = samplesPerBlock;
     mTimeInSamples = 0;
+    delay.prepareToPlay(static_cast<float> (sampleRate));
 }
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     int64_t bufferStartTimeSamples = getPlayHead()->getPosition()->getTimeInSamples().orFallback (mTimeInSamples);
+    auto timeInSeconds = static_cast<float> (mTimeInSamples / bufferStartTimeSamples);
+    auto spinnerRadius = mDiameter->get() / 2;
 
-    //    // Compute Delay Time
-    //    float speakerXPos = sin(spinPhasePos);
-    //    float speakerYPos = sin(spinPhasePos);
+    // Compute Delay Time
+    // (All positions in meters)
+    juce::Point<float> focalPointPosition = { 0, -(mDistanceToFocalPoint->get()) };
+    juce::Point<float> phantomSpeakerPosition = { 0, spinnerRadius };
+
+    // float phantomSpeakerDistFull = sqrt(pow(0 - focalPointXPos, 2) + pow(spinnerRadius - focalPointYPos, 2))
+    // which simplifies to:
+    float phantomSpeakerDist = phantomSpeakerPosition.getDistanceFrom(focalPointPosition);
+
+    juce::Point<float> speakerPosition = computeSpeakerPosition (timeInSeconds);
+    float realSpeakerDist = speakerPosition.getDistanceFrom(focalPointPosition);
+    float distDelta = phantomSpeakerDist - realSpeakerDist;
 
     // Adjust Delay Time
+    float timeDelta = distDelta / SPEED_OF_SOUND_MS;
 
     // Run Delay
+    delay.setParameters(timeDelta, 0, 1);
+    delay.processBlock(buffer);
 
     // Update current time (if host doesn't provide time)
     mTimeInSamples += mSamplesPerBlock;
@@ -227,4 +242,14 @@ void PluginProcessor::_constructValueTreeStates()
                 juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                     return std::to_string (v1) + " %";
                 })) }));
+}
+juce::Point<float> PluginProcessor::computeSpeakerPosition (float timeInSeconds)
+{
+    float secondsPerSpin = 1.f / abs(mSpinRate->get());
+    bool spinClockwise = mSpinRate -> get() >= 0;
+    float phaseDecimal = ((timeInSeconds / secondsPerSpin) - trunc(timeInSeconds / secondsPerSpin) + (mPhase->get() / 100.f));
+    phaseDecimal = spinClockwise ? phaseDecimal : -phaseDecimal;
+    float y = -sin(juce::MathConstants<float>::twoPi * phaseDecimal);
+    float x = cos(juce::MathConstants<float>::twoPi * phaseDecimal);
+    return {x, y};
 }

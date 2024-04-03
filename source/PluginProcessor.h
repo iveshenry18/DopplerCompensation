@@ -10,6 +10,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include "Delay.h"
 #include "SyncManager.h"
 #include <utility>
 
@@ -67,7 +68,7 @@ public:
     }
 
 private:
-    double mSampleRate = 44100;
+    float mSampleRate = 44100;
     // If the host doesn't provide transport info, we need to keep track of sample time ourselves
     int mSamplesPerBlock = 512;
 
@@ -83,6 +84,9 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
     void _constructValueTreeStates();
 
+    Delay delay;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
+    juce::Point<float> computeSpeakerPosition (float seconds);
 };
