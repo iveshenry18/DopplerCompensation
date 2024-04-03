@@ -7,7 +7,6 @@
 */
 
 #include "PluginProcessor.h"
-#include "Fraction.h"
 #include "PluginEditor.h"
 
 //==============================================================================
@@ -29,10 +28,10 @@ PluginProcessor::PluginProcessor() :
     jassert (mDiameter != nullptr);
     mDistanceToFocalPoint = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("distance_to_focal_point"));
     jassert (mDistanceToFocalPoint != nullptr);
-    mSpinRate = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("diameter"));
+    mSpinRate = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("spin_rate"));
     jassert (mSpinRate != nullptr);
-    mDiameter = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("diameter"));
-    jassert (mDiameter != nullptr);
+    mPhaseOffset = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("phase_offset"));
+    jassert (mPhaseOffset != nullptr);
 }
 
 PluginProcessor::~PluginProcessor() = default;
@@ -41,36 +40,64 @@ PluginProcessor::~PluginProcessor() = default;
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     mSampleRate = static_cast<float> (sampleRate);
+    jassert (samplesPerBlock >= 0);
+    jassert (samplesPerBlock <= 4096);
     mSamplesPerBlock = samplesPerBlock;
     mTimeInSamples = 0;
-    delay->prepareToPlay (static_cast<float> (sampleRate));
+
+    mSmoothedDiameter.reset (sampleRate, 0.1);
+    mSmoothedDistanceToFocalPoint.reset (sampleRate, 0.1);
+    mSmoothedPhaseOffset.reset (sampleRate, 0.1);
+    mSmoothedSpinRate.reset (sampleRate, 0.1);
+
+    delayLine.prepare ({ sampleRate,
+        static_cast<juce::uint32> (samplesPerBlock),
+        static_cast<juce::uint32> (getTotalNumInputChannels()) });
 }
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    mSmoothedDiameter.setTargetValue (mDiameter->get());
+    mSmoothedDistanceToFocalPoint.setTargetValue (mDistanceToFocalPoint->get());
+    mSmoothedSpinRate.setTargetValue (mSpinRate->get());
+    mSmoothedPhaseOffset.setTargetValue (mPhaseOffset->get());
     int64_t bufferStartTimeSamples = getPlayHead()->getPosition()->getTimeInSamples().orFallback (mTimeInSamples);
-    auto timeInSeconds = static_cast<float> (mTimeInSamples / bufferStartTimeSamples);
-    auto spinnerRadius = mDiameter->get() / 2;
 
-    // Compute Delay Time
-    // (All positions in meters)
-    juce::Point<float> focalPointPosition = { 0, -(mDistanceToFocalPoint->get()) };
-    juce::Point<float> phantomSpeakerPosition = { 0, spinnerRadius };
+    for (auto sample_idx = 0; sample_idx < buffer.getNumSamples(); sample_idx++)
+    {
+        auto diameter = mSmoothedDiameter.getNextValue();
+        auto distanceToFocalPoint = mSmoothedDistanceToFocalPoint.getNextValue();
+        auto spinnerRadius = diameter / 2;
 
-    // float phantomSpeakerDistFull = sqrt(pow(0 - focalPointXPos, 2) + pow(spinnerRadius - focalPointYPos, 2))
-    // which simplifies to:
-    float phantomSpeakerDist = phantomSpeakerPosition.getDistanceFrom (focalPointPosition);
+        // Compute Delay Time
+        // (All positions in meters)
+        juce::Point<float> focalPointPosition = { 0, -(distanceToFocalPoint) };
+        juce::Point<float> phantomSpeakerPosition = { 0, spinnerRadius };
 
-    juce::Point<float> speakerPosition = computeSpeakerPosition (timeInSeconds);
-    float realSpeakerDist = speakerPosition.getDistanceFrom (focalPointPosition);
-    float distDelta = phantomSpeakerDist - realSpeakerDist;
+        // float phantomSpeakerDistFull = sqrt(pow(0 - focalPointXPos, 2) + pow(spinnerRadius - focalPointYPos, 2))
+        // which simplifies to:
+        float phantomSpeakerDist = phantomSpeakerPosition.getDistanceFrom (focalPointPosition);
 
-    // Adjust Delay Time
-    float timeDelta = distDelta / SPEED_OF_SOUND_MS;
+        float currentSeconds = (static_cast<float> (bufferStartTimeSamples + sample_idx)) / mSampleRate;
+        juce::Point<float> speakerPosition = computeSpeakerPosition (currentSeconds);
+        float realSpeakerDist = speakerPosition.getDistanceFrom (focalPointPosition);
+        float distDelta = phantomSpeakerDist - realSpeakerDist;
 
-    // Run Delay
-    delay->setParameters (timeDelta, 0, 1);
-    delay->processBlock (buffer);
+        // Adjust Delay Time
+        float timeDelta = distDelta / SPEED_OF_SOUND_MS;
+
+        // Use 100% wet delay
+        for (int channel_idx = 0; channel_idx < buffer.getNumChannels(); channel_idx++)
+        {
+            delayLine.pushSample (channel_idx,
+                buffer.getSample (channel_idx, sample_idx));
+
+            // No Dry/Wet, just replace with delayed sample
+            buffer.setSample (channel_idx,
+                sample_idx,
+                delayLine.popSample (channel_idx, timeDelta * mSampleRate, true));
+        }
+    }
 
     // Update current time (if host doesn't provide time)
     mTimeInSamples += mSamplesPerBlock;
@@ -235,8 +262,8 @@ void PluginProcessor::_constructValueTreeStates()
                 juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                     return std::to_string (v1) + " rps";
                 })), // default value
-            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("phase", 1), // parameterID
-                "Phase (%)", // parameter name
+            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("phase_offset", 1), // parameterID
+                "Phase Offset (%)", // parameter name
                 juce::NormalisableRange<float> (0, 100),
                 0,
                 juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
@@ -245,9 +272,11 @@ void PluginProcessor::_constructValueTreeStates()
 }
 juce::Point<float> PluginProcessor::computeSpeakerPosition (float timeInSeconds)
 {
-    float secondsPerSpin = 1.f / abs (mSpinRate->get());
-    bool spinClockwise = mSpinRate->get() >= 0;
-    float phaseDecimal = ((timeInSeconds / secondsPerSpin) - trunc (timeInSeconds / secondsPerSpin) + (mPhase->get() / 100.f));
+    auto spinRate = mSmoothedSpinRate.getNextValue();
+    auto phaseOffset = mSmoothedPhaseOffset.getNextValue();
+    float secondsPerSpin = 1.f / abs (spinRate);
+    bool spinClockwise = spinRate >= 0;
+    float phaseDecimal = ((timeInSeconds / secondsPerSpin) - trunc (timeInSeconds / secondsPerSpin) + (phaseOffset / 100.f));
     phaseDecimal = spinClockwise ? phaseDecimal : -phaseDecimal;
     float y = -sin (juce::MathConstants<float>::twoPi * phaseDecimal);
     float x = cos (juce::MathConstants<float>::twoPi * phaseDecimal);

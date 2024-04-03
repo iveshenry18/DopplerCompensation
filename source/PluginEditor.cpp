@@ -25,13 +25,13 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
         audioProcessor.getVTS(),
         "diameter",
         mDiameterSlider));
-    mDiameterLabel.setText ("Diameter (m)", juce::dontSendNotification);
+    mDiameterLabel.setText ("Diameter", juce::dontSendNotification);
     mDiameterLabel.setJustificationType (juce::Justification::centred);
 
     mDistanceToFocalPointSlider.setRange (0, 10);
     mDistanceToFocalPointSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
     mDistanceToFocalPointSlider.setTextBoxIsEditable (true);
-    mDistanceToFocalPointSlider.setTitle ("Distance to Focal Point (m)");
+    mDistanceToFocalPointSlider.setTitle ("Distance to Focal Point");
     mDistanceToFocalPointSlider.setHelpText ("This is the distance to the focal point in meters");
     mDistanceToFocalPointSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
     mDistanceToFocalPointSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
@@ -44,7 +44,7 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mSpinRateSlider.setRange (0, 10);
     mSpinRateSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
     mSpinRateSlider.setTextBoxIsEditable (true);
-    mSpinRateSlider.setTitle ("Spin Rate (rps)");
+    mSpinRateSlider.setTitle ("Spin Rate");
     mSpinRateSlider.setHelpText ("This is the rate of the spinner in rotations per second");
     mSpinRateSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
     mSpinRateSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
@@ -55,19 +55,19 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mSpinRateLabel.setText ("Spin Rate (rps)", juce::dontSendNotification);
     mSpinRateLabel.setJustificationType (juce::Justification::centred);
 
-    mPhaseSlider.setRange (0, 100);
-    mPhaseSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
-    mPhaseSlider.setTextBoxIsEditable (true);
-    mPhaseSlider.setTitle ("Phase (%)");
-    mPhaseSlider.setHelpText ("This is the Phase of the spinner. Use it to rotate the focal point.");
-    mPhaseSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
-    mPhaseSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
+    mPhaseOffsetSlider.setRange (0, 100);
+    mPhaseOffsetSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
+    mPhaseOffsetSlider.setTextBoxIsEditable (true);
+    mPhaseOffsetSlider.setTitle ("Phase (%)");
+    mPhaseOffsetSlider.setHelpText ("This is the Phase of the spinner. Use it to rotate the focal point.");
+    mPhaseOffsetSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
+    mPhaseOffsetSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
         audioProcessor.getVTS(),
-        "phase",
-        mPhaseSlider));
+        "phase_offset",
+        mPhaseOffsetSlider));
 
-    mPhaseLabel.setText ("Phase (%)", juce::dontSendNotification);
-    mPhaseLabel.setJustificationType (juce::Justification::centred);
+    mPhaseOffsetLabel.setText ("Phase Offset", juce::dontSendNotification);
+    mPhaseOffsetLabel.setJustificationType (juce::Justification::centred);
 
     addAndMakeVisible (mDiameterSlider);
     addAndMakeVisible (mDiameterLabel);
@@ -75,8 +75,8 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     addAndMakeVisible (mDistanceToFocalPointLabel);
     addAndMakeVisible (mSpinRateSlider);
     addAndMakeVisible (mSpinRateLabel);
-    addAndMakeVisible (mPhaseSlider);
-    addAndMakeVisible (mPhaseLabel);
+    addAndMakeVisible (mPhaseOffsetSlider);
+    addAndMakeVisible (mPhaseOffsetLabel);
 
     setSize (500, 300);
 }
@@ -99,10 +99,10 @@ void PluginEditor::resized()
     mDiameterSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
     mDistanceToFocalPointSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
     mSpinRateSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
-    mPhaseSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
+    mPhaseOffsetSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
 
     mDiameterLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
     mDistanceToFocalPointLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
     mSpinRateLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
-    mPhaseLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
+    mPhaseOffsetLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
 }

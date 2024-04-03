@@ -40,9 +40,9 @@ private:
     juce::Slider mSpinRateSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mSpinRateSliderAttachment;
     juce::Label mSpinRateLabel;
-    juce::Slider mPhaseSlider;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mPhaseSliderAttachment;
-    juce::Label mPhaseLabel;
+    juce::Slider mPhaseOffsetSlider;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mPhaseOffsetSliderAttachment;
+    juce::Label mPhaseOffsetLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };
