@@ -11,11 +11,11 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 
+#include "DopplerSpinner.h"
 #include "SyncManager.h"
 #include <utility>
 
 const int MAX_DELAY_IN_SAMPLES = 4096;
-const float SPEED_OF_SOUND_MS = 343;
 
 //==============================================================================
 /**
@@ -82,17 +82,12 @@ private:
     juce::AudioParameterFloat* mSpinRate = nullptr;
     juce::AudioParameterFloat* mPhaseOffset = nullptr;
 
-    juce::SmoothedValue<float> mSmoothedDiameter = 0;
-    juce::SmoothedValue<float> mSmoothedDistanceToFocalPoint = 0;
-    juce::SmoothedValue<float> mSmoothedSpinRate = 0;
-    juce::SmoothedValue<float> mSmoothedPhaseOffset = 0;
-
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
     void _constructValueTreeStates();
 
+    DopplerSpinner dopplerSpinner;
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLine = juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> (MAX_DELAY_IN_SAMPLES);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
-    juce::Point<float> computeSpeakerPosition (float seconds);
 };
