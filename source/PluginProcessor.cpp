@@ -43,7 +43,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     mSampleRate = static_cast<float> (sampleRate);
     mSamplesPerBlock = samplesPerBlock;
     mTimeInSamples = 0;
-    delay.prepareToPlay(static_cast<float> (sampleRate));
+    delay->prepareToPlay (static_cast<float> (sampleRate));
 }
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -59,18 +59,18 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
 
     // float phantomSpeakerDistFull = sqrt(pow(0 - focalPointXPos, 2) + pow(spinnerRadius - focalPointYPos, 2))
     // which simplifies to:
-    float phantomSpeakerDist = phantomSpeakerPosition.getDistanceFrom(focalPointPosition);
+    float phantomSpeakerDist = phantomSpeakerPosition.getDistanceFrom (focalPointPosition);
 
     juce::Point<float> speakerPosition = computeSpeakerPosition (timeInSeconds);
-    float realSpeakerDist = speakerPosition.getDistanceFrom(focalPointPosition);
+    float realSpeakerDist = speakerPosition.getDistanceFrom (focalPointPosition);
     float distDelta = phantomSpeakerDist - realSpeakerDist;
 
     // Adjust Delay Time
     float timeDelta = distDelta / SPEED_OF_SOUND_MS;
 
     // Run Delay
-    delay.setParameters(timeDelta, 0, 1);
-    delay.processBlock(buffer);
+    delay->setParameters (timeDelta, 0, 1);
+    delay->processBlock (buffer);
 
     // Update current time (if host doesn't provide time)
     mTimeInSamples += mSamplesPerBlock;
@@ -245,11 +245,11 @@ void PluginProcessor::_constructValueTreeStates()
 }
 juce::Point<float> PluginProcessor::computeSpeakerPosition (float timeInSeconds)
 {
-    float secondsPerSpin = 1.f / abs(mSpinRate->get());
-    bool spinClockwise = mSpinRate -> get() >= 0;
-    float phaseDecimal = ((timeInSeconds / secondsPerSpin) - trunc(timeInSeconds / secondsPerSpin) + (mPhase->get() / 100.f));
+    float secondsPerSpin = 1.f / abs (mSpinRate->get());
+    bool spinClockwise = mSpinRate->get() >= 0;
+    float phaseDecimal = ((timeInSeconds / secondsPerSpin) - trunc (timeInSeconds / secondsPerSpin) + (mPhase->get() / 100.f));
     phaseDecimal = spinClockwise ? phaseDecimal : -phaseDecimal;
-    float y = -sin(juce::MathConstants<float>::twoPi * phaseDecimal);
-    float x = cos(juce::MathConstants<float>::twoPi * phaseDecimal);
-    return {x, y};
+    float y = -sin (juce::MathConstants<float>::twoPi * phaseDecimal);
+    float x = cos (juce::MathConstants<float>::twoPi * phaseDecimal);
+    return { x, y };
 }

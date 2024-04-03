@@ -84,7 +84,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
     void _constructValueTreeStates();
 
-    Delay delay;
+    Delay* delay;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)

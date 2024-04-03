@@ -10,21 +10,20 @@
 class Delay
 {
 public:
-
     Delay();
 
     ~Delay();
 
-    void prepareToPlay(float inSampleRate);
+    void prepareToPlay (float inSampleRate);
 
-    void processBlock(juce::AudioBuffer<float>& inBuffer);
+    void processBlock (juce::AudioBuffer<float>& inBuffer);
 
     /**
      * @param inDelayTimeSeconds [0.01, 1]
      * @param inFeedbackPercent  [0, 1]
      * @param inDryWetPercent [0, 1]
      */
-    void setParameters(float inDelayTimeSeconds, float inFeedbackPercent, float inDryWetPercent);
+    void setParameters (float inDelayTimeSeconds, float inFeedbackPercent, float inDryWetPercent);
 
 private:
     /* Circular Buffer */
@@ -35,7 +34,6 @@ private:
     float mFeedbackLeft = 0;
     float mFeedbackRight = 0;
 
-
     const float mMaxDelayTimeSeconds = 1.f;
     float mSampleRate = 44100.f;
 
@@ -43,7 +41,6 @@ private:
     juce::LinearSmoothedValue<float> mSmoothedDryWet;
     juce::LinearSmoothedValue<float> mSmoothedFeedback;
     juce::LinearSmoothedValue<float> mSmoothedTime;
-
 };
 
 #endif //APICPPDELAY_DELAY_H
