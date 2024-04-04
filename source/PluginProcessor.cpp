@@ -32,6 +32,8 @@ PluginProcessor::PluginProcessor() :
     jassert (mSpinRate != nullptr);
     mPhaseOffset = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("phase_offset"));
     jassert (mPhaseOffset != nullptr);
+    mTestMode = dynamic_cast<juce::AudioParameterBool*> (mValueTreeState->getParameter ("test_mode"));
+    jassert (mTestMode != nullptr);
 }
 
 PluginProcessor::~PluginProcessor() = default;
@@ -45,7 +47,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     mSamplesPerBlock = samplesPerBlock;
     mTimeInSamples = 0;
 
-    dopplerSpinner.prepareToPlay(sampleRate);
+    dopplerSpinner.prepareToPlay (sampleRate);
 
     delayLine.prepare ({ sampleRate,
         static_cast<juce::uint32> (samplesPerBlock),
@@ -54,28 +56,42 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    dopplerSpinner.updateParams(
+    dopplerSpinner.updateParams (
         mDiameter->get(),
         mDistanceToFocalPoint->get(),
         mSpinRate->get(),
-        mPhaseOffset->get()
-        );
-    int64_t bufferStartTimeSamples = getPlayHead()->getPosition()->getTimeInSamples().orFallback (mTimeInSamples);
+        mPhaseOffset->get());
 
     for (auto sample_idx = 0; sample_idx < buffer.getNumSamples(); sample_idx++)
     {
-        float timeDelta = dopplerSpinner.getNextTimeDelta();
+        SpinnerState spinnerState = dopplerSpinner.getNextState();
 
-        // Use 100% wet delay
         for (int channel_idx = 0; channel_idx < buffer.getNumChannels(); channel_idx++)
         {
             delayLine.pushSample (channel_idx,
                 buffer.getSample (channel_idx, sample_idx));
 
-            // No Dry/Wet, just replace with delayed sample
-            buffer.setSample (channel_idx,
-                sample_idx,
-                delayLine.popSample (channel_idx, timeDelta * mSampleRate, true));
+            if (mTestMode->get())
+            /** Play click at phantom point in test mode **/
+            {
+                if (spinnerState.phantomSpeakerPosition.getDistanceFrom (spinnerState.speakerPosition) < mDiameter->get() / 1000.f)
+                {
+                    buffer.setSample (channel_idx, sample_idx, 0.9f);
+                }
+                else
+                {
+                    buffer.setSample (channel_idx, sample_idx, 0.f);
+                }
+            }
+            else
+            /** Apply delay and gain reduction **/
+            {
+                float newSample = delayLine.popSample (channel_idx, spinnerState.timeDeltaSeconds * mSampleRate, true);
+                newSample *= spinnerState.gainFactor;
+                buffer.setSample (channel_idx,
+                    sample_idx,
+                    newSample);
+            }
         }
     }
 
@@ -237,7 +253,7 @@ void PluginProcessor::_constructValueTreeStates()
                 })),
             std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spin_rate", 1), // parameterID
                 "Spin Rate (rps)", // parameter name
-                juce::NormalisableRange<float> (0, 10),
+                juce::NormalisableRange<float> (-10, 10),
                 1,
                 juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                     return std::to_string (v1) + " rps";
@@ -248,5 +264,8 @@ void PluginProcessor::_constructValueTreeStates()
                 0,
                 juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                     return std::to_string (v1) + " %";
-                })) }));
+                })),
+            std::make_unique<juce::AudioParameterBool> (juce::ParameterID ("test_mode", 1), // parameterID
+                "Test Mode", // parameter name
+                false) }));
 }

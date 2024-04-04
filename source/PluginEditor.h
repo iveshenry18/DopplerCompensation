@@ -43,6 +43,9 @@ private:
     juce::Slider mPhaseOffsetSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mPhaseOffsetSliderAttachment;
     juce::Label mPhaseOffsetLabel;
+    juce::ToggleButton mTestModeButton;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> mTestModeButtonAttachment;
+    juce::Label mTestModeLabel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginEditor)
 };

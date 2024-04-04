@@ -69,6 +69,17 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mPhaseOffsetLabel.setText ("Phase Offset", juce::dontSendNotification);
     mPhaseOffsetLabel.setJustificationType (juce::Justification::centred);
 
+    mTestModeButton.setClickingTogglesState (true);
+    mTestModeButton.setTitle ("Test Mode");
+    mTestModeButton.setHelpText ("Activates Test Mode");
+    mTestModeButtonAttachment.reset (new juce::AudioProcessorValueTreeState::ButtonAttachment (
+        audioProcessor.getVTS(),
+        "test_mode",
+        mTestModeButton));
+
+    mTestModeLabel.setText ("Test Mode", juce::dontSendNotification);
+    mTestModeLabel.setJustificationType (juce::Justification::right);
+
     addAndMakeVisible (mDiameterSlider);
     addAndMakeVisible (mDiameterLabel);
     addAndMakeVisible (mDistanceToFocalPointSlider);
@@ -77,6 +88,8 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     addAndMakeVisible (mSpinRateLabel);
     addAndMakeVisible (mPhaseOffsetSlider);
     addAndMakeVisible (mPhaseOffsetLabel);
+    addAndMakeVisible (mTestModeButton);
+    addAndMakeVisible (mTestModeLabel);
 
     setSize (500, 300);
 }
@@ -93,8 +106,9 @@ void PluginEditor::paint (juce::Graphics& g)
 void PluginEditor::resized()
 {
     auto bounds = getLocalBounds();
-    auto knob_area = bounds.removeFromTop (int (getHeight() * .7));
+    auto knob_area = bounds.removeFromTop (int (getHeight() * .6));
     auto label_area = bounds.removeFromTop (int (getHeight() * .3));
+    auto test_mode_area = bounds.removeFromBottom (int (getHeight() * .1));
 
     mDiameterSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
     mDistanceToFocalPointSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
@@ -105,4 +119,7 @@ void PluginEditor::resized()
     mDistanceToFocalPointLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
     mSpinRateLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
     mPhaseOffsetLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
+
+    mTestModeLabel.setBounds (test_mode_area.removeFromLeft (getWidth() / 2));
+    mTestModeButton.setBounds (test_mode_area.removeFromLeft (getWidth() / 2));
 }

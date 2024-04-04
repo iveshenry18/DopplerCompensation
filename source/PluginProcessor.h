@@ -81,6 +81,7 @@ private:
     juce::AudioParameterFloat* mDistanceToFocalPoint = nullptr;
     juce::AudioParameterFloat* mSpinRate = nullptr;
     juce::AudioParameterFloat* mPhaseOffset = nullptr;
+    juce::AudioParameterBool* mTestMode = nullptr;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
     void _constructValueTreeStates();
