@@ -68,6 +68,11 @@ public:
         return *mValueTreeState;
     }
 
+    DopplerSpinner* getDopplerSpinner()
+    {
+        return &dopplerSpinner;
+    }
+
 private:
     float mSampleRate = 44100;
     // If the host doesn't provide transport info, we need to keep track of sample time ourselves

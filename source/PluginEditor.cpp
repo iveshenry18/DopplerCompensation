@@ -13,7 +13,7 @@
 
 //==============================================================================
 PluginEditor::PluginEditor (PluginProcessor& parent)
-    : AudioProcessorEditor (&parent), audioProcessor (parent)
+    : AudioProcessorEditor (&parent), audioProcessor (parent), speakerVisualizationContainer (audioProcessor.getDopplerSpinner())
 {
     mDiameterSlider.setRange (0, 5);
     mDiameterSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
@@ -90,8 +90,9 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     addAndMakeVisible (mPhaseOffsetLabel);
     addAndMakeVisible (mTestModeButton);
     addAndMakeVisible (mTestModeLabel);
+    addAndMakeVisible (speakerVisualizationContainer);
 
-    setSize (500, 300);
+    setSize (800, 300);
 }
 
 PluginEditor::~PluginEditor() = default;
@@ -106,20 +107,23 @@ void PluginEditor::paint (juce::Graphics& g)
 void PluginEditor::resized()
 {
     auto bounds = getLocalBounds();
+    auto visualizer_area = bounds.removeFromRight (int (getWidth() * .3));
     auto knob_area = bounds.removeFromTop (int (getHeight() * .6));
     auto label_area = bounds.removeFromTop (int (getHeight() * .3));
     auto test_mode_area = bounds.removeFromBottom (int (getHeight() * .1));
 
-    mDiameterSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
-    mDistanceToFocalPointSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
-    mSpinRateSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
-    mPhaseOffsetSlider.setBounds (knob_area.removeFromLeft (getWidth() / 4));
+    speakerVisualizationContainer.setBounds (visualizer_area);
 
-    mDiameterLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
-    mDistanceToFocalPointLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
-    mSpinRateLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
-    mPhaseOffsetLabel.setBounds (label_area.removeFromLeft (getWidth() / 4));
+    mDiameterSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth() / 4));
+    mDistanceToFocalPointSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth() / 3));
+    mSpinRateSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth() / 2));
+    mPhaseOffsetSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth()));
 
-    mTestModeLabel.setBounds (test_mode_area.removeFromLeft (getWidth() / 2));
-    mTestModeButton.setBounds (test_mode_area.removeFromLeft (getWidth() / 2));
+    mDiameterLabel.setBounds (label_area.removeFromLeft (label_area.getWidth() / 4));
+    mDistanceToFocalPointLabel.setBounds (label_area.removeFromLeft (label_area.getWidth() / 3));
+    mSpinRateLabel.setBounds (label_area.removeFromLeft (label_area.getWidth() / 2));
+    mPhaseOffsetLabel.setBounds (label_area.removeFromLeft (label_area.getWidth()));
+
+    mTestModeLabel.setBounds (test_mode_area.removeFromLeft (test_mode_area.getWidth() / 2));
+    mTestModeButton.setBounds (test_mode_area.removeFromLeft (test_mode_area.getWidth()));
 }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "SpeakerVisualizationContainer.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
@@ -31,6 +32,7 @@ private:
     // access the processor object that created it.
     PluginProcessor& audioProcessor;
 
+    SpeakerVisualizationContainer speakerVisualizationContainer;
     juce::Slider mDiameterSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mDiameterSliderAttachment;
     juce::Label mDiameterLabel;

@@ -74,7 +74,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
             if (mTestMode->get())
             /** Play click at phantom point in test mode **/
             {
-                if (spinnerState.phantomSpeakerPosition.getDistanceFrom (spinnerState.speakerPosition) < mDiameter->get() / 1000.f)
+                if (spinnerState.isClicking)
                 {
                     buffer.setSample (channel_idx, sample_idx, 0.9f);
                 }

@@ -13,8 +13,13 @@ struct SpinnerState
     float gainFactor;
     juce::Point<float> speakerPosition;
     juce::Point<float> phantomSpeakerPosition;
+    bool isClicking;
+    float diameter;
+    float spinnerRadius;
+    float distanceToFocalPoint;
 };
 
+// TODO: consider Hall Effect Sensor
 class DopplerSpinner
 {
 public:
