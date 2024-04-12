@@ -24,7 +24,7 @@ PluginProcessor::PluginProcessor() :
 {
     _constructValueTreeStates();
 
-    mDiameter = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("diameter"));
+    mDiameter = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("spinnerDiameter"));
     jassert (mDiameter != nullptr);
     mDistanceToFocalPoint = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("distance_to_focal_point"));
     jassert (mDistanceToFocalPoint != nullptr);
@@ -237,23 +237,23 @@ void PluginProcessor::_constructValueTreeStates()
 {
     mValueTreeState.reset (new juce::AudioProcessorValueTreeState (*this, nullptr, juce::Identifier ("DopplerCompensationParams"),
 
-        { std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("diameter", 1), // parameterID
+        { std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spinnerDiameter", 1), // parameterID
               "Diameter (m)", // parameter name
-              juce::NormalisableRange<float> (0, 5),
+              juce::NormalisableRange<float> (0.01, MAX_SPINNER_DIAMETER),
               1,
               juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                   return std::to_string (v1) + " m";
               })),
             std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("distance_to_focal_point", 1), // parameterID
                 "Distance to Focal Point (m)", // parameter name
-                juce::NormalisableRange<float> (0, 10),
+                juce::NormalisableRange<float> (0, MAX_DISTANCE_TO_FOCAL_POINT),
                 2,
                 juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                     return std::to_string (v1) + " m";
                 })),
             std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spin_rate", 1), // parameterID
                 "Spin Rate (rps)", // parameter name
-                juce::NormalisableRange<float> (-10, 10),
+                juce::NormalisableRange<float> (-(MAX_SPIN_RATE), MAX_SPIN_RATE),
                 1,
                 juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                     return std::to_string (v1) + " rps";

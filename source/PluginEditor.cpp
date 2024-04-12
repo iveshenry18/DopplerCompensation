@@ -19,11 +19,11 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mDiameterSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
     mDiameterSlider.setTextBoxIsEditable (true);
     mDiameterSlider.setTitle ("Diameter (m)");
-    mDiameterSlider.setHelpText ("This is the diameter of the spinner in meters");
+    mDiameterSlider.setHelpText ("This is the spinnerDiameter of the spinner in meters");
     mDiameterSlider.setSliderStyle (juce::Slider::SliderStyle::RotaryVerticalDrag);
     mDiameterSliderAttachment.reset (new juce::AudioProcessorValueTreeState::SliderAttachment (
         audioProcessor.getVTS(),
-        "diameter",
+        "spinnerDiameter",
         mDiameterSlider));
     mDiameterLabel.setText ("Diameter", juce::dontSendNotification);
     mDiameterLabel.setJustificationType (juce::Justification::centred);

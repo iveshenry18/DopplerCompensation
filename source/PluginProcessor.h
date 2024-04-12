@@ -16,6 +16,9 @@
 #include <utility>
 
 const int MAX_DELAY_IN_SAMPLES = 4096;
+const float MAX_SPINNER_DIAMETER = 5.f;
+const float MAX_DISTANCE_TO_FOCAL_POINT = 10.f;
+const float MAX_SPIN_RATE = 10.f;
 
 //==============================================================================
 /**

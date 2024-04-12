@@ -14,8 +14,7 @@ struct SpinnerState
     juce::Point<float> speakerPosition;
     juce::Point<float> phantomSpeakerPosition;
     bool isClicking;
-    float diameter;
-    float spinnerRadius;
+    float spinnerDiameter;
     float distanceToFocalPoint;
 };
 

@@ -68,7 +68,6 @@ SpinnerState DopplerSpinner::getNextState (bool incrementPhase)
         phantomSpeakerPosition,
         isClicking,
         diameter,
-        spinnerRadius,
         distanceToFocalPoint
     };
 }
