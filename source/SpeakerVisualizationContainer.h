@@ -19,6 +19,7 @@ public:
 
 private:
     juce::Rectangle<float> mSpeaker;
+    juce::Rectangle<float> mPhantomSpeaker;
     juce::Rectangle<float> mOrigin;
     juce::Rectangle<float> mFocalPoint;
     DopplerSpinner* mDopplerSpinner;

@@ -39,26 +39,35 @@ juce::Point<int> SpeakerVisualizationContainer::physicalToViewport (juce::Point<
 
 void SpeakerVisualizationContainer::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::lightskyblue);
+    g.fillAll (juce::Colours::whitesmoke);
     SpinnerState spinnerState = mDopplerSpinner->getNextState (false);
 
+    juce::Point<int> phantomPhantomSpeakerViewportPosition = physicalToViewport (spinnerState.phantomSpeakerPosition);
+    mPhantomSpeaker.setSize (6, 6);
+    mPhantomSpeaker.setCentre (phantomPhantomSpeakerViewportPosition.getX(), phantomPhantomSpeakerViewportPosition.getY());
+    g.setColour (juce::Colours::grey);
+    g.fillEllipse (mPhantomSpeaker);
+
     juce::Point<int> speakerViewportPosition = physicalToViewport (spinnerState.speakerPosition);
-    mSpeaker.setSize (12, 12);
+    mSpeaker.setSize (8, 8);
     mSpeaker.setCentre (speakerViewportPosition.getX(), speakerViewportPosition.getY());
-    g.setColour (spinnerState.isClicking ? juce::Colours::green : juce::Colours::red);
+    g.setColour (spinnerState.isClicking ? juce::Colours::red : juce::Colours::black);
     g.fillEllipse (mSpeaker);
 
     juce::Point<int> originViewportPosition = physicalToViewport (juce::Point<float> { 0, 0 });
-    mOrigin.setSize (5, 5);
+    mOrigin.setSize (3, 3);
     mOrigin.setCentre (originViewportPosition.getX(), originViewportPosition.getY());
     g.setColour (juce::Colours::black);
     g.fillEllipse (mOrigin);
 
     juce::Point<int> focalPointViewportPosition = physicalToViewport (juce::Point<float> { 0, -spinnerState.distanceToFocalPoint });
-    mFocalPoint.setSize (8, 8);
+    mFocalPoint.setSize (5, 5);
     mFocalPoint.setCentre (focalPointViewportPosition.getX(), focalPointViewportPosition.getY());
-    g.setColour (juce::Colours::white);
+    g.setColour (juce::Colours::lightsalmon);
     g.fillEllipse (mFocalPoint);
+
+    g.setColour (juce::Colours::grey);
+    g.drawLine (juce::Line<int> { originViewportPosition.getX(), originViewportPosition.getY(), speakerViewportPosition.getX(), speakerViewportPosition.getY() }.toFloat());
 }
 
 void SpeakerVisualizationContainer::timerCallback()
