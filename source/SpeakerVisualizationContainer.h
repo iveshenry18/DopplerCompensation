@@ -18,10 +18,12 @@ public:
     void timerCallback() override;
 
 private:
+    void drawGridlines (juce::Graphics& g);
+
     juce::Rectangle<float> mSpeaker;
     juce::Rectangle<float> mPhantomSpeaker;
     juce::Rectangle<float> mOrigin;
     juce::Rectangle<float> mFocalPoint;
-    PhysicalToViewport physicalToViewport;
+    PhysicalToViewport mPhysicalToViewport;
     DopplerSpinner* mDopplerSpinner;
 };
