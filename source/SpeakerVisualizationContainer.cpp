@@ -6,8 +6,7 @@
 
 SpeakerVisualizationContainer::SpeakerVisualizationContainer (DopplerSpinner* dopplerSpinner) : mDopplerSpinner (dopplerSpinner)
 {
-    // ~60 fps
-    startTimerHz (60);
+    startTimerHz (120);
 }
 
 SpeakerVisualizationContainer::~SpeakerVisualizationContainer()
@@ -43,8 +42,8 @@ void SpeakerVisualizationContainer::drawGridlines (juce::Graphics& g)
 
 void SpeakerVisualizationContainer::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::whitesmoke);
     SpinnerState spinnerState = mDopplerSpinner->getNextState (false);
+    g.fillAll (juce::Colours::whitesmoke);
     auto physicalBounds = juce::Rectangle<float> {}.withCentre ({ 0, 0 }).withSizeKeepingCentre (spinnerState.spinnerDiameter * 1.1, std::max (spinnerState.spinnerDiameter / 2, spinnerState.distanceToFocalPoint) * 2.2);
     mPhysicalToViewport.setPhysicalBounds (physicalBounds);
     mPhysicalToViewport.setViewportBounds (getBounds());
@@ -54,13 +53,17 @@ void SpeakerVisualizationContainer::paint (juce::Graphics& g)
     juce::Point<int> phantomPhantomSpeakerViewportPosition = mPhysicalToViewport.transform (spinnerState.phantomSpeakerPosition);
     mPhantomSpeaker.setSize (6, 6);
     mPhantomSpeaker.setCentre (phantomPhantomSpeakerViewportPosition.getX(), phantomPhantomSpeakerViewportPosition.getY());
-    g.setColour (juce::Colours::grey);
+    g.setColour (juce::Colours::lightgrey);
     g.fillEllipse (mPhantomSpeaker);
+
+    mCircumference = juce::Rectangle<float> { 0, 0 }.withCentre ({ 0, 0 }).withSizeKeepingCentre (spinnerState.spinnerDiameter, spinnerState.spinnerDiameter);
+    g.setColour (juce::Colours::lightgrey);
+    g.drawEllipse (mPhysicalToViewport.transform (mCircumference).toFloat(), 1);
 
     juce::Point<int> speakerViewportPosition = mPhysicalToViewport.transform (spinnerState.speakerPosition);
     mSpeaker.setSize (10, 10);
     mSpeaker.setCentre (speakerViewportPosition.getX(), speakerViewportPosition.getY());
-    g.setColour (spinnerState.isClicking ? juce::Colours::red : juce::Colours::black);
+    g.setColour (juce::Colours::black);
     g.fillEllipse (mSpeaker);
 
     juce::Point<int> focalPointViewportPosition = mPhysicalToViewport.transform (juce::Point<float> { 0, -spinnerState.distanceToFocalPoint });

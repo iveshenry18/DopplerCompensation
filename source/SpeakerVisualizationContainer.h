@@ -22,7 +22,7 @@ private:
 
     juce::Rectangle<float> mSpeaker;
     juce::Rectangle<float> mPhantomSpeaker;
-    juce::Rectangle<float> mOrigin;
+    juce::Rectangle<float> mCircumference;
     juce::Rectangle<float> mFocalPoint;
     PhysicalToViewport mPhysicalToViewport;
     DopplerSpinner* mDopplerSpinner;
