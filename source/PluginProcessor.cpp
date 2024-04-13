@@ -60,7 +60,8 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
         mDiameter->get(),
         mDistanceToFocalPoint->get(),
         mSpinRate->get(),
-        mPhaseOffset->get());
+        mPhaseOffset->get(),
+        mSampleRate);
 
     for (auto sample_idx = 0; sample_idx < buffer.getNumSamples(); sample_idx++)
     {

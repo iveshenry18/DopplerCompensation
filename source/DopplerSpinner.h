@@ -23,7 +23,11 @@ class DopplerSpinner
 {
 public:
     void prepareToPlay (double sampleRate);
-    void updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset);
+    void updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset, double sampleRate);
+    /**
+     * Gets the next state of the spinner
+     * @param incrementPhase when true, smoothed values and the spinner's position is updated.
+     */
     SpinnerState getNextState (bool incrementPhase = true);
 
 private:

@@ -13,12 +13,13 @@ void DopplerSpinner::prepareToPlay (double sampleRate)
     mSmoothedSpinRate.reset (sampleRate, 0.1);
 }
 
-void DopplerSpinner::updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset)
+void DopplerSpinner::updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset, double sampleRate)
 {
     mSmoothedDiameter.setTargetValue (diameter);
     mSmoothedDistanceToFocalPoint.setTargetValue (distanceToFocalPoint);
     mSmoothedSpinRate.setTargetValue (spinRate);
     mSmoothedPhaseOffset.setTargetValue (phaseOffset);
+    mSampleRate = sampleRate;
 }
 
 juce::Point<float> DopplerSpinner::getNextSpeakerPosition (bool incrementPhase)
@@ -35,6 +36,10 @@ juce::Point<float> DopplerSpinner::getNextSpeakerPosition (bool incrementPhase)
     {
         auto phaseIncrement = static_cast<float> (spinRate / mSampleRate);
         mPhase = mPhase + phaseIncrement;
+        if (mPhase > 1)
+        {
+            mPhase -= 1;
+        }
     }
 
     return { x, y };
