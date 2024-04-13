@@ -12,7 +12,7 @@ class SpeakerVisualizationContainer : public juce::Component, public juce::Timer
 {
 public:
     SpeakerVisualizationContainer (DopplerSpinner* dopplerSpinner);
-    ~SpeakerVisualizationContainer();
+    ~SpeakerVisualizationContainer() override;
     void paint (juce::Graphics& g) override;
     void resized() override;
     void timerCallback() override;
@@ -20,10 +20,12 @@ public:
 private:
     void drawGridlines (juce::Graphics& g);
 
-    juce::Rectangle<float> mSpeaker;
+    juce::Rectangle<float> mSpeakerPhysical;
+    juce::Rectangle<float> mSpeakerViewport;
     juce::Rectangle<float> mPhantomSpeaker;
     juce::Rectangle<float> mCircumference;
-    juce::Rectangle<float> mFocalPoint;
+    juce::Rectangle<float> mFocalPointHead;
+    juce::Rectangle<float> mFocalPointBody;
     PhysicalToViewport mPhysicalToViewport;
     DopplerSpinner* mDopplerSpinner;
 };

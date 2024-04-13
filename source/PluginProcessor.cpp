@@ -239,7 +239,7 @@ void PluginProcessor::_constructValueTreeStates()
 
         { std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spinnerDiameter", 1), // parameterID
               "Diameter (m)", // parameter name
-              juce::NormalisableRange<float> (0.01, MAX_SPINNER_DIAMETER),
+              juce::NormalisableRange<float> (0.01f, MAX_SPINNER_DIAMETER),
               1,
               juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
                   return std::to_string (v1) + " m";

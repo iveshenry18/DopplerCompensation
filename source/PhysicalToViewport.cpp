@@ -7,7 +7,7 @@
 PhysicalToViewport::PhysicalToViewport (juce::Rectangle<float> physicalBounds, juce::Rectangle<int> viewportBounds) : mPhysicalBounds (physicalBounds),
                                                                                                                       mViewportBounds (viewportBounds) {}
 
-PhysicalToViewport::PhysicalToViewport() : mPhysicalBounds (juce::Rectangle<float> {}.withCentre ({ 0, 0 }).withSizeKeepingCentre (MAX_SPINNER_DIAMETER * 1.1, std::max (MAX_SPINNER_DIAMETER / 2, MAX_DISTANCE_TO_FOCAL_POINT) * 2.2)),
+PhysicalToViewport::PhysicalToViewport() : mPhysicalBounds (juce::Rectangle<float> {}.withCentre ({ 0, 0 }).withSizeKeepingCentre (MAX_SPINNER_DIAMETER * 1.1, std::max (MAX_SPINNER_DIAMETER / 2, MAX_DISTANCE_TO_FOCAL_POINT) * 2.4)),
                                            mViewportBounds (juce::Rectangle<int> { 200, 200 }) {}
 
 juce::Point<int> PhysicalToViewport::transform (juce::Point<float> in)

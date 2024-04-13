@@ -44,37 +44,35 @@ void SpeakerVisualizationContainer::paint (juce::Graphics& g)
 {
     SpinnerState spinnerState = mDopplerSpinner->getNextState (false);
     g.fillAll (juce::Colours::whitesmoke);
-    auto physicalBounds = juce::Rectangle<float> {}.withCentre ({ 0, 0 }).withSizeKeepingCentre (spinnerState.spinnerDiameter * 1.1, std::max (spinnerState.spinnerDiameter / 2, spinnerState.distanceToFocalPoint) * 2.2);
+    auto physicalBounds = juce::Rectangle<float> {}.withCentre ({ 0, 0 }).withSizeKeepingCentre (spinnerState.spinnerDiameter * 1.1, std::max (spinnerState.spinnerDiameter / 2, spinnerState.distanceToFocalPoint) * 2.4);
     mPhysicalToViewport.setPhysicalBounds (physicalBounds);
     mPhysicalToViewport.setViewportBounds (getBounds());
 
     drawGridlines (g);
 
-    juce::Point<int> phantomPhantomSpeakerViewportPosition = mPhysicalToViewport.transform (spinnerState.phantomSpeakerPosition);
-    mPhantomSpeaker.setSize (6, 6);
-    mPhantomSpeaker.setCentre (phantomPhantomSpeakerViewportPosition.getX(), phantomPhantomSpeakerViewportPosition.getY());
+    mPhantomSpeaker = juce::Rectangle<float>().withCentre (spinnerState.phantomSpeakerPosition).withSizeKeepingCentre (0.08, 0.08);
     g.setColour (juce::Colours::lightgrey);
-    g.fillEllipse (mPhantomSpeaker);
+    g.fillEllipse (mPhysicalToViewport.transform (mPhantomSpeaker).toFloat());
 
     mCircumference = juce::Rectangle<float> { 0, 0 }.withCentre ({ 0, 0 }).withSizeKeepingCentre (spinnerState.spinnerDiameter, spinnerState.spinnerDiameter);
     g.setColour (juce::Colours::lightgrey);
     g.drawEllipse (mPhysicalToViewport.transform (mCircumference).toFloat(), 1);
 
-    juce::Point<int> speakerViewportPosition = mPhysicalToViewport.transform (spinnerState.speakerPosition);
-    mSpeaker.setSize (10, 10);
-    mSpeaker.setCentre (speakerViewportPosition.getX(), speakerViewportPosition.getY());
+    mSpeakerPhysical = juce::Rectangle<float>().withCentre (spinnerState.speakerPosition).withSizeKeepingCentre (0.08, 0.08);
     g.setColour (juce::Colours::black);
-    g.fillEllipse (mSpeaker);
+    mSpeakerViewport = mPhysicalToViewport.transform (mSpeakerPhysical).toFloat();
+    g.fillEllipse (mSpeakerViewport);
 
-    juce::Point<int> focalPointViewportPosition = mPhysicalToViewport.transform (juce::Point<float> { 0, -spinnerState.distanceToFocalPoint });
-    mFocalPoint.setSize (10, 10);
-    mFocalPoint.setCentre (focalPointViewportPosition.getX(), focalPointViewportPosition.getY());
+    mFocalPointBody = juce::Rectangle<float>().withCentre ({ 0, -spinnerState.distanceToFocalPoint }).withSizeKeepingCentre (0.41, 0.2);
+    g.setColour (juce::Colours::blue);
+    g.fillEllipse (mPhysicalToViewport.transform (mFocalPointBody).toFloat());
+    mFocalPointHead = juce::Rectangle<float>().withCentre ({ 0, -spinnerState.distanceToFocalPoint }).withSizeKeepingCentre (0.19, 0.2);
     g.setColour (juce::Colours::lightsalmon);
-    g.fillEllipse (mFocalPoint);
+    g.fillEllipse (mPhysicalToViewport.transform (mFocalPointHead).toFloat());
 
     juce::Point<int> originViewportPosition = mPhysicalToViewport.transform (juce::Point<float> { 0, 0 });
     g.setColour (juce::Colours::grey);
-    g.drawLine (juce::Line<int> { originViewportPosition.getX(), originViewportPosition.getY(), speakerViewportPosition.getX(), speakerViewportPosition.getY() }.toFloat());
+    g.drawLine (juce::Line<int> { originViewportPosition.getX(), originViewportPosition.getY(), (int) mSpeakerViewport.getCentreX(), (int) mSpeakerViewport.getCentreY() }.toFloat());
 }
 
 void SpeakerVisualizationContainer::timerCallback()
