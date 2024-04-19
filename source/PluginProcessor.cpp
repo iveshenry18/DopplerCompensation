@@ -19,8 +19,9 @@ PluginProcessor::PluginProcessor() :
         #endif
                                                          .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
     #endif
-                                     )
+                                             ),
 #endif
+                                     mSpinRateManager (this)
 {
     _constructValueTreeStates();
 
@@ -28,15 +29,18 @@ PluginProcessor::PluginProcessor() :
     jassert (mDiameter != nullptr);
     mDistanceToFocalPoint = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("distance_to_focal_point"));
     jassert (mDistanceToFocalPoint != nullptr);
-    mSpinRate = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("spin_rate"));
-    jassert (mSpinRate != nullptr);
     mPhaseOffset = dynamic_cast<juce::AudioParameterFloat*> (mValueTreeState->getParameter ("phase_offset"));
     jassert (mPhaseOffset != nullptr);
     mTestMode = dynamic_cast<juce::AudioParameterBool*> (mValueTreeState->getParameter ("test_mode"));
     jassert (mTestMode != nullptr);
+
+    mSpinRateManager.updateParams();
+    mSpinRateManager.startTimer (100);
 }
 
-PluginProcessor::~PluginProcessor() = default;
+PluginProcessor::~PluginProcessor() {
+    mSpinRateManager.stopTimer();
+};
 
 //==============================================================================
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -48,6 +52,7 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     mTimeInSamples = 0;
 
     dopplerSpinner.prepareToPlay (sampleRate);
+    mSpinRateManager.prepareToPlay (sampleRate);
 
     delayLine.prepare ({ sampleRate,
         static_cast<juce::uint32> (samplesPerBlock),
@@ -56,10 +61,11 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
+    mSpinRateManager.processBlock (buffer.getNumSamples());
     dopplerSpinner.updateParams (
         mDiameter->get(),
         mDistanceToFocalPoint->get(),
-        mSpinRate->get(),
+        mSpinRateManager.getSpinRate(),
         mPhaseOffset->get(),
         mSampleRate);
 
@@ -236,6 +242,9 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 }
 void PluginProcessor::_constructValueTreeStates()
 {
+    auto sourceSelectorParam = std::make_unique<juce::AudioParameterChoice> (juce::ParameterID ("spin_rate_source", 1), "Spin Rate Source", mSpinRateManager.getAvailableSources(), MANUAL_SOURCE.first + 1);
+    sourceSelectorParam->addListener (&mSpinRateManager);
+
     mValueTreeState.reset (new juce::AudioProcessorValueTreeState (*this, nullptr, juce::Identifier ("DopplerCompensationParams"),
 
         { std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spinnerDiameter", 1), // parameterID
@@ -268,5 +277,6 @@ void PluginProcessor::_constructValueTreeStates()
                 })),
             std::make_unique<juce::AudioParameterBool> (juce::ParameterID ("test_mode", 1), // parameterID
                 "Test Mode", // parameter name
-                false) }));
+                false),
+            std::move (sourceSelectorParam) }));
 }

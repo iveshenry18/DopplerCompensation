@@ -45,6 +45,9 @@ private:
     juce::Slider mPhaseOffsetSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mPhaseOffsetSliderAttachment;
     juce::Label mPhaseOffsetLabel;
+    juce::ComboBox mSpinRateSourceSelector;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> mSpinRateSourceSelectorAttachment;
+    juce::Label mSpinRateSourceSelectorLabel;
     juce::ToggleButton mTestModeButton;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> mTestModeButtonAttachment;
     juce::Label mTestModeLabel;

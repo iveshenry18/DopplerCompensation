@@ -55,6 +55,18 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mSpinRateLabel.setText ("Spin Rate (rps)", juce::dontSendNotification);
     mSpinRateLabel.setJustificationType (juce::Justification::centred);
 
+    mSpinRateSourceSelectorAttachment.reset (new juce::AudioProcessorValueTreeState::ComboBoxAttachment (
+        audioProcessor.getVTS(),
+        "spin_rate_source",
+        mSpinRateSourceSelector));
+    auto spinRateSourceParam = audioProcessor.getVTS().getParameter ("spin_rate_source");
+    mSpinRateSourceSelector.addItemList (spinRateSourceParam->getAllValueStrings(), 1);
+    // TODO: get init value correctly
+//    mSpinRateSourceSelector.setItemEnabled (spinRateSourceParam->getValue(), true);
+
+    mSpinRateSourceSelectorLabel.setText ("Spin Rate Source", juce::dontSendNotification);
+    mSpinRateSourceSelectorLabel.setJustificationType (juce::Justification::centred);
+
     mPhaseOffsetSlider.setRange (0, 100);
     mPhaseOffsetSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
     mPhaseOffsetSlider.setTextBoxIsEditable (true);
@@ -91,7 +103,8 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     addAndMakeVisible (mTestModeButton);
     addAndMakeVisible (mTestModeLabel);
     addAndMakeVisible (speakerVisualizationContainer);
-
+    addAndMakeVisible (mSpinRateSourceSelector);
+    addAndMakeVisible (mSpinRateSourceSelectorLabel);
     setSize (800, 300);
 }
 
@@ -107,23 +120,25 @@ void PluginEditor::paint (juce::Graphics& g)
 void PluginEditor::resized()
 {
     auto bounds = getLocalBounds();
-    auto visualizer_area = bounds.removeFromRight (int (getWidth() * .3));
-    auto knob_area = bounds.removeFromTop (int (getHeight() * .6));
-    auto label_area = bounds.removeFromTop (int (getHeight() * .3));
-    auto test_mode_area = bounds.removeFromBottom (int (getHeight() * .1));
+    auto visualizerArea = bounds.removeFromRight (int (getWidth() * .3));
+    auto knobArea = bounds.removeFromTop (int (getHeight() * .6));
+    auto labelArea = bounds.removeFromTop (int (getHeight() * .2));
+    auto bottomArea = bounds.removeFromBottom (int (getHeight() * .2));
 
-    speakerVisualizationContainer.setBounds (visualizer_area);
+    speakerVisualizationContainer.setBounds (visualizerArea);
 
-    mDiameterSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth() / 4));
-    mDistanceToFocalPointSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth() / 3));
-    mSpinRateSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth() / 2));
-    mPhaseOffsetSlider.setBounds (knob_area.removeFromLeft (knob_area.getWidth()));
+    mDiameterSlider.setBounds (knobArea.removeFromLeft (knobArea.getWidth() / 4));
+    mDistanceToFocalPointSlider.setBounds (knobArea.removeFromLeft (knobArea.getWidth() / 3));
+    mSpinRateSlider.setBounds (knobArea.removeFromLeft (knobArea.getWidth() / 2));
+    mPhaseOffsetSlider.setBounds (knobArea.removeFromLeft (knobArea.getWidth()));
 
-    mDiameterLabel.setBounds (label_area.removeFromLeft (label_area.getWidth() / 4));
-    mDistanceToFocalPointLabel.setBounds (label_area.removeFromLeft (label_area.getWidth() / 3));
-    mSpinRateLabel.setBounds (label_area.removeFromLeft (label_area.getWidth() / 2));
-    mPhaseOffsetLabel.setBounds (label_area.removeFromLeft (label_area.getWidth()));
+    mDiameterLabel.setBounds (labelArea.removeFromLeft (labelArea.getWidth() / 4));
+    mDistanceToFocalPointLabel.setBounds (labelArea.removeFromLeft (labelArea.getWidth() / 3));
+    mSpinRateLabel.setBounds (labelArea.removeFromLeft (labelArea.getWidth() / 2));
+    mPhaseOffsetLabel.setBounds (labelArea.removeFromLeft (labelArea.getWidth()));
 
-    mTestModeLabel.setBounds (test_mode_area.removeFromLeft (test_mode_area.getWidth() / 2));
-    mTestModeButton.setBounds (test_mode_area.removeFromLeft (test_mode_area.getWidth()));
+    mTestModeLabel.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth() / 4));
+    mTestModeButton.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth() / 3));
+    mSpinRateSourceSelectorLabel.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth() / 2));
+    mSpinRateSourceSelector.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth()));
 }

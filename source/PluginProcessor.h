@@ -12,6 +12,7 @@
 #include <juce_dsp/juce_dsp.h>
 
 #include "DopplerSpinner.h"
+#include "SpinRateManager.h"
 #include "SyncManager.h"
 #include <utility>
 
@@ -87,9 +88,10 @@ private:
 
     juce::AudioParameterFloat* mDiameter = nullptr;
     juce::AudioParameterFloat* mDistanceToFocalPoint = nullptr;
-    juce::AudioParameterFloat* mSpinRate = nullptr;
     juce::AudioParameterFloat* mPhaseOffset = nullptr;
     juce::AudioParameterBool* mTestMode = nullptr;
+
+    SpinRateManager mSpinRateManager;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
     void _constructValueTreeStates();
