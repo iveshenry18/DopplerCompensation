@@ -55,14 +55,13 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mSpinRateLabel.setText ("Spin Rate (rps)", juce::dontSendNotification);
     mSpinRateLabel.setJustificationType (juce::Justification::centred);
 
-    mSpinRateSourceSelectorAttachment.reset (new juce::AudioProcessorValueTreeState::ComboBoxAttachment (
-        audioProcessor.getVTS(),
-        "spin_rate_source",
-        mSpinRateSourceSelector));
-    auto spinRateSourceParam = audioProcessor.getVTS().getParameter ("spin_rate_source");
-    mSpinRateSourceSelector.addItemList (spinRateSourceParam->getAllValueStrings(), 1);
-    // TODO: get init value correctly
-//    mSpinRateSourceSelector.setItemEnabled (spinRateSourceParam->getValue(), true);
+    mSpinRateSourceSelector.addItemList (audioProcessor.getAvailableSpinRateSources(), 1);
+    mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateSource() + 1, juce::dontSendNotification);
+    mSpinRateSourceSelector.onChange = [this] {
+        auto newSelectedId = mSpinRateSourceSelector.getSelectedId();
+        DBG ("Setting Spin Rate Source To " + newSelectedId);
+        audioProcessor.setSpinRateSource(newSelectedId - 1);
+    };
 
     mSpinRateSourceSelectorLabel.setText ("Spin Rate Source", juce::dontSendNotification);
     mSpinRateSourceSelectorLabel.setJustificationType (juce::Justification::centred);

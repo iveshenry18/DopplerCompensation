@@ -12,7 +12,7 @@ const std::pair<int, std::string> MANUAL_SOURCE = { 0, "Manual" };
 class PluginProcessor;
 
 // Possible: use a different program to take serial to OSC, then read the OSC
-class SpinRateManager : public juce::AudioProcessorParameter::Listener, public juce::HighResolutionTimer
+class SpinRateManager : public juce::HighResolutionTimer
 {
 public:
     SpinRateManager (PluginProcessor* pp);
@@ -20,8 +20,6 @@ public:
     {
         return mAvailableSources;
     }
-    void parameterValueChanged (int parameterIndex, float newValue) override;
-    void parameterGestureChanged (int parameterIndex, bool gestureIsStarting) override {}
 
     void updateParams();
     void prepareToPlay (double sampleRate);
@@ -34,10 +32,15 @@ public:
     {
         readValues();
     }
+    void setSource (int source);
+    int getSource() {
+        return mCurrentPort;
+    }
 
 private:
     void updateAvailableSources();
 
+    int mCurrentPort = MANUAL_SOURCE.first;
     PluginProcessor* mPluginProcessor;
     juce::StringArray mAvailableSources;
     std::unique_ptr<SerialPort> mSerialPort;

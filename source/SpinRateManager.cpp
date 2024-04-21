@@ -39,22 +39,30 @@ void SpinRateManager::updateParams()
     jassert (mManualSpinRate != nullptr);
 }
 
-void SpinRateManager::parameterValueChanged (int parameterIndex, float newValue)
+void SpinRateManager::setSource (int source)
 {
-    auto spinRateParam = mPluginProcessor->getVTS().getParameter ("spin_rate_source");
-    jassert (spinRateParam != nullptr);
-    if (parameterIndex == spinRateParam->getParameterIndex())
+    jassert (source >= 0 && source < mAvailableSources.size());
+    auto newSource = mAvailableSources[source];
+    DBG ("Set Spin Rate Source");
+    DBG (newSource);
+    if (newSource.toStdString() != MANUAL_SOURCE.second)
     {
-        DBG ("Set Spin Rate Source");
-        DBG (spinRateParam->getCurrentValueAsText());
-        if (spinRateParam->getCurrentValueAsText().toStdString() != MANUAL_SOURCE.second)
+        try
         {
-            mSerialPort = std::unique_ptr<SerialPort> (new SerialPort { spinRateParam->getCurrentValueAsText().toStdString() });
-        }
-        else
+            mSerialPort = std::unique_ptr<SerialPort> (new SerialPort { newSource.toStdString() });
+            mCurrentPort = source;
+        } catch (const std::exception& e)
         {
-            mSerialPort = nullptr;
+            DBG ("Error opening serial port");
+            DBG (e.what());
+            mPluginProcessor->setSpinRateSource (MANUAL_SOURCE.first);
+            mCurrentPort = MANUAL_SOURCE.first;
         }
+    }
+    else
+    {
+        mSerialPort = nullptr;
+        mCurrentPort = MANUAL_SOURCE.first;
     }
 }
 
@@ -111,7 +119,7 @@ void SpinRateManager::readValues()
             {
                 float mostRecentlySentRpm = std::stof (line);
                 float newRps = mostRecentlySentRpm / 60.f;
-                DBG("Read new RPS: " + std::to_string(newRps));
+                DBG ("Read new RPS: " + std::to_string (newRps));
                 mSmoothedSpinRate.setTargetValue (newRps);
             } catch (const std::invalid_argument e)
             {

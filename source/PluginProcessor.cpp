@@ -38,7 +38,8 @@ PluginProcessor::PluginProcessor() :
     mSpinRateManager.startTimer (100);
 }
 
-PluginProcessor::~PluginProcessor() {
+PluginProcessor::~PluginProcessor()
+{
     mSpinRateManager.stopTimer();
 };
 
@@ -240,43 +241,38 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new PluginProcessor();
 }
+
 void PluginProcessor::_constructValueTreeStates()
 {
-    auto sourceSelectorParam = std::make_unique<juce::AudioParameterChoice> (juce::ParameterID ("spin_rate_source", 1), "Spin Rate Source", mSpinRateManager.getAvailableSources(), MANUAL_SOURCE.first + 1);
-    sourceSelectorParam->addListener (&mSpinRateManager);
-
-    mValueTreeState.reset (new juce::AudioProcessorValueTreeState (*this, nullptr, juce::Identifier ("DopplerCompensationParams"),
-
-        { std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spinnerDiameter", 1), // parameterID
-              "Diameter (m)", // parameter name
-              juce::NormalisableRange<float> (0.01f, MAX_SPINNER_DIAMETER),
-              1,
-              juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
-                  return std::to_string (v1) + " m";
-              })),
-            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("distance_to_focal_point", 1), // parameterID
-                "Distance to Focal Point (m)", // parameter name
-                juce::NormalisableRange<float> (0, MAX_DISTANCE_TO_FOCAL_POINT),
-                2,
-                juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
-                    return std::to_string (v1) + " m";
-                })),
-            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spin_rate", 1), // parameterID
-                "Spin Rate (rps)", // parameter name
-                juce::NormalisableRange<float> (-(MAX_SPIN_RATE), MAX_SPIN_RATE),
-                1,
-                juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
-                    return std::to_string (v1) + " rps";
-                })), // default value
-            std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("phase_offset", 1), // parameterID
-                "Phase Offset (%)", // parameter name
-                juce::NormalisableRange<float> (0, 100),
-                0,
-                juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
-                    return std::to_string (v1) + " %";
-                })),
-            std::make_unique<juce::AudioParameterBool> (juce::ParameterID ("test_mode", 1), // parameterID
-                "Test Mode", // parameter name
-                false),
-            std::move (sourceSelectorParam) }));
+    mValueTreeState.reset (new juce::AudioProcessorValueTreeState (*this, nullptr, juce::Identifier ("DopplerCompensationParams"), { std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spinnerDiameter", 1), // parameterID
+                                                                                                                                         "Diameter (m)", // parameter name
+                                                                                                                                         juce::NormalisableRange<float> (0.01f, MAX_SPINNER_DIAMETER),
+                                                                                                                                         1,
+                                                                                                                                         juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                                                                                                                                             return std::to_string (v1) + " m";
+                                                                                                                                         })),
+                                                                                                                                       std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("distance_to_focal_point", 1), // parameterID
+                                                                                                                                           "Distance to Focal Point (m)", // parameter name
+                                                                                                                                           juce::NormalisableRange<float> (0, MAX_DISTANCE_TO_FOCAL_POINT),
+                                                                                                                                           2,
+                                                                                                                                           juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                                                                                                                                               return std::to_string (v1) + " m";
+                                                                                                                                           })),
+                                                                                                                                       std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("spin_rate", 1), // parameterID
+                                                                                                                                           "Spin Rate (rps)", // parameter name
+                                                                                                                                           juce::NormalisableRange<float> (-(MAX_SPIN_RATE), MAX_SPIN_RATE),
+                                                                                                                                           1,
+                                                                                                                                           juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                                                                                                                                               return std::to_string (v1) + " rps";
+                                                                                                                                           })), // default value
+                                                                                                                                       std::make_unique<juce::AudioParameterFloat> (juce::ParameterID ("phase_offset", 1), // parameterID
+                                                                                                                                           "Phase Offset (%)", // parameter name
+                                                                                                                                           juce::NormalisableRange<float> (0, 100),
+                                                                                                                                           0,
+                                                                                                                                           juce::AudioParameterFloatAttributes().withStringFromValueFunction ([] (auto v1, auto v2) {
+                                                                                                                                               return std::to_string (v1) + " %";
+                                                                                                                                           })),
+                                                                                                                                       std::make_unique<juce::AudioParameterBool> (juce::ParameterID ("test_mode", 1), // parameterID
+                                                                                                                                           "Test Mode", // parameter name
+                                                                                                                                           false) }));
 }

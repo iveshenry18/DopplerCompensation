@@ -26,7 +26,7 @@ public:
 
     void openPort (const std::string& portName)
     {
-        fd = open (portName.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+        fd = open (portName.c_str(), O_RDONLY | O_NOCTTY | O_NDELAY);
         if (fd == -1)
         {
             throw std::runtime_error ("open_port: Unable to open " + portName);
@@ -90,7 +90,7 @@ public:
             line += c;
         }
         return line;
-    };
+    }
 
 private:
     int fd; // File descriptor for the port

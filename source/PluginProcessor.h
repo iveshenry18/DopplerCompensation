@@ -72,6 +72,17 @@ public:
         return *mValueTreeState;
     }
 
+    juce::StringArray getAvailableSpinRateSources() {
+        return mSpinRateManager.getAvailableSources();
+    }
+
+    void setSpinRateSource (int source) {
+        mSpinRateManager.setSource (source);
+    }
+    int getSpinRateSource() {
+        return mSpinRateManager.getSource();
+    }
+
     DopplerSpinner* getDopplerSpinner()
     {
         return &dopplerSpinner;
@@ -91,6 +102,7 @@ private:
     juce::AudioParameterFloat* mPhaseOffset = nullptr;
     juce::AudioParameterBool* mTestMode = nullptr;
 
+    int currentSource = MANUAL_SOURCE.first;
     SpinRateManager mSpinRateManager;
 
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
