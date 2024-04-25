@@ -139,5 +139,5 @@ void SpinRateManager::readValues()
 
 void SpinRateManager::prepareToPlay (double sampleRate)
 {
-    mSmoothedSpinRate.reset (sampleRate, 0.05);
+    mSmoothedSpinRate.reset (sampleRate, 0.1f);
 }

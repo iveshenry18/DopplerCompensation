@@ -13,6 +13,7 @@
 
 void PluginEditor::updateSpinRateSources()
 {
+    mSpinRateSourceSelector.clear();
     auto sources = audioProcessor.getAvailableSpinRateSources();
     for (int i = 0; i < sources.size(); i++)
     {
