@@ -11,6 +11,25 @@
 #include "PluginProcessor.h"
 #include <memory>
 
+void PluginEditor::updateSpinRateSources()
+{
+    auto sources = audioProcessor.getAvailableSpinRateSources();
+    for (int i = 0; i < sources.size(); i++)
+    {
+        mSpinRateSourceSelector.addItem (sources[i].first, i + 1);
+        mSpinRateSourceSelector.setItemEnabled (i + 1, sources[i].second);
+    }
+    mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateSource() + 1, juce::dontSendNotification);
+    mSpinRateSourceSelector.onChange = [this] {
+        auto newSelectedId = mSpinRateSourceSelector.getSelectedId();
+        DBG ("Setting Spin Rate Source To " + std::to_string (newSelectedId));
+        audioProcessor.setSpinRateSource (newSelectedId - 1);
+    };
+    audioProcessor.setOnSpinRateSourceChange ([this] {
+        mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateSource() + 1, juce::dontSendNotification);
+    });
+}
+
 //==============================================================================
 PluginEditor::PluginEditor (PluginProcessor& parent)
     : AudioProcessorEditor (&parent), audioProcessor (parent), speakerVisualizationContainer (audioProcessor.getDopplerSpinner())
@@ -55,16 +74,25 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mSpinRateLabel.setText ("Spin Rate (rps)", juce::dontSendNotification);
     mSpinRateLabel.setJustificationType (juce::Justification::centred);
 
-    mSpinRateSourceSelector.addItemList (audioProcessor.getAvailableSpinRateSources(), 1);
-    mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateSource() + 1, juce::dontSendNotification);
-    mSpinRateSourceSelector.onChange = [this] {
-        auto newSelectedId = mSpinRateSourceSelector.getSelectedId();
-        DBG ("Setting Spin Rate Source To " + newSelectedId);
-        audioProcessor.setSpinRateSource(newSelectedId - 1);
+    updateSpinRateSources();
+
+    mInvertSpinRateButton.setClickingTogglesState (true);
+    mInvertSpinRateButton.setTitle ("Invert Spin Rate");
+    mInvertSpinRateButton.setHelpText ("Inverts the spin rate");
+    mInvertSpinRateButton.onStateChange = [this] {
+        audioProcessor.getSpinRateManager()->setInvertSpinRate (mInvertSpinRateButton.getToggleState());
     };
+    mInvertSpinRateLabel.setText ("Invert Spin Rate", juce::dontSendNotification);
+    mInvertSpinRateLabel.setJustificationType (juce::Justification::right);
+
+    mCurrentSpinRateLabel.setText ("Current Spin Rate ", juce::dontSendNotification);
+    mCurrentSpinRateLabel.setJustificationType (juce::Justification::right);
+
+    mCurrentSpinRateValue.setText (juce::String (audioProcessor.getSpinRateManager()->getSpinRate()), juce::dontSendNotification);
+    mCurrentSpinRateValue.setFont (juce::Font (juce::Font::getDefaultMonospacedFontName(), 15.0f, juce::Font::plain));
 
     mSpinRateSourceSelectorLabel.setText ("Spin Rate Source", juce::dontSendNotification);
-    mSpinRateSourceSelectorLabel.setJustificationType (juce::Justification::centred);
+    mSpinRateSourceSelectorLabel.setJustificationType (juce::Justification::right);
 
     mPhaseOffsetSlider.setRange (0, 100);
     mPhaseOffsetSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
@@ -97,6 +125,10 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     addAndMakeVisible (mDistanceToFocalPointLabel);
     addAndMakeVisible (mSpinRateSlider);
     addAndMakeVisible (mSpinRateLabel);
+    addAndMakeVisible (mInvertSpinRateButton);
+    addAndMakeVisible (mInvertSpinRateLabel);
+    addAndMakeVisible (mCurrentSpinRateLabel);
+    addAndMakeVisible (mCurrentSpinRateValue);
     addAndMakeVisible (mPhaseOffsetSlider);
     addAndMakeVisible (mPhaseOffsetLabel);
     addAndMakeVisible (mTestModeButton);
@@ -114,15 +146,27 @@ void PluginEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (juce::Colours::grey);
+
+    mCurrentSpinRateValue.setText (juce::String (audioProcessor.getSpinRateManager()->getSpinRate()), juce::dontSendNotification);
+    if (audioProcessor.getSpinRateManager()->getSource() != MANUAL_SOURCE.first)
+    {
+        mSpinRateSlider.setEnabled (false);
+        mSpinRateLabel.setFont (juce::Font (15.0f, juce::Font::italic));
+    }
+    else
+    {
+        mSpinRateSlider.setEnabled (true);
+        mSpinRateLabel.setFont (juce::Font (15.0f, juce::Font::plain));
+    }
 }
 
 void PluginEditor::resized()
 {
     auto bounds = getLocalBounds();
     auto visualizerArea = bounds.removeFromRight (int (getWidth() * .3));
-    auto knobArea = bounds.removeFromTop (int (getHeight() * .6));
+    auto knobArea = bounds.removeFromTop (int (getHeight() * .5));
     auto labelArea = bounds.removeFromTop (int (getHeight() * .2));
-    auto bottomArea = bounds.removeFromBottom (int (getHeight() * .2));
+    auto bottomArea = bounds.removeFromBottom (int (getHeight() * .3));
 
     speakerVisualizationContainer.setBounds (visualizerArea);
 
@@ -138,6 +182,16 @@ void PluginEditor::resized()
 
     mTestModeLabel.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth() / 4));
     mTestModeButton.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth() / 3));
-    mSpinRateSourceSelectorLabel.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth() / 2));
-    mSpinRateSourceSelector.setBounds (bottomArea.removeFromLeft (bottomArea.getWidth()));
+
+    auto spinRateSourceArea = bottomArea.removeFromLeft (bottomArea.getWidth());
+    auto currentSpinRateArea = spinRateSourceArea.removeFromBottom (spinRateSourceArea.getHeight() / 3);
+    auto invertSpinRateArea = spinRateSourceArea.removeFromBottom (spinRateSourceArea.getHeight() / 2);
+    mSpinRateSourceSelectorLabel.setBounds (spinRateSourceArea.removeFromLeft (spinRateSourceArea.getWidth() / 2));
+    mSpinRateSourceSelector.setBounds (spinRateSourceArea.removeFromLeft (spinRateSourceArea.getWidth()));
+
+    mInvertSpinRateLabel.setBounds (invertSpinRateArea.removeFromLeft (invertSpinRateArea.getWidth() / 2));
+    mInvertSpinRateButton.setBounds (invertSpinRateArea.removeFromLeft (invertSpinRateArea.getWidth()));
+
+    mCurrentSpinRateLabel.setBounds (currentSpinRateArea.removeFromLeft (currentSpinRateArea.getWidth() / 2));
+    mCurrentSpinRateValue.setBounds (currentSpinRateArea.removeFromLeft (currentSpinRateArea.getWidth()));
 }

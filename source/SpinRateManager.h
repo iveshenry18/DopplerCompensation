@@ -16,7 +16,7 @@ class SpinRateManager : public juce::HighResolutionTimer
 {
 public:
     SpinRateManager (PluginProcessor* pp);
-    juce::StringArray getAvailableSources()
+    std::vector<std::pair<juce::String, bool>> getAvailableSources()
     {
         return mAvailableSources;
     }
@@ -26,25 +26,37 @@ public:
     void processBlock (int numSamples);
     float getSpinRate()
     {
-        return mSmoothedSpinRate.getCurrentValue();
+        int sign = invertSpinRate ? -1 : 1;
+        return sign * mSmoothedSpinRate.getCurrentValue();
     }
     void hiResTimerCallback() override
     {
         readValues();
     }
     void setSource (int source);
-    int getSource() {
+    int getSource()
+    {
         return mCurrentPort;
+    }
+    void setOnSourceChange (std::function<void()> fn)
+    {
+        onSourceChange = fn;
+    }
+    void setInvertSpinRate (bool invert)
+    {
+        invertSpinRate = invert;
     }
 
 private:
     void updateAvailableSources();
 
     int mCurrentPort = MANUAL_SOURCE.first;
+    bool invertSpinRate = false;
     PluginProcessor* mPluginProcessor;
-    juce::StringArray mAvailableSources;
+    std::vector<std::pair<juce::String, bool>> mAvailableSources;
     std::unique_ptr<SerialPort> mSerialPort;
     juce::SmoothedValue<float> mSmoothedSpinRate;
     juce::AudioParameterFloat* mManualSpinRate;
     void readValues();
+    std::function<void()> onSourceChange;
 };

@@ -42,7 +42,7 @@ void SpinRateManager::updateParams()
 void SpinRateManager::setSource (int source)
 {
     jassert (source >= 0 && source < mAvailableSources.size());
-    auto newSource = mAvailableSources[source];
+    auto newSource = mAvailableSources[source].first;
     DBG ("Set Spin Rate Source");
     DBG (newSource);
     if (newSource.toStdString() != MANUAL_SOURCE.second)
@@ -57,6 +57,7 @@ void SpinRateManager::setSource (int source)
             DBG (e.what());
             mPluginProcessor->setSpinRateSource (MANUAL_SOURCE.first);
             mCurrentPort = MANUAL_SOURCE.first;
+            onSourceChange();
         }
     }
     else
@@ -75,24 +76,31 @@ void SpinRateManager::updateAvailableSources()
         DBG (externalSourcesString);
 
         // Split exec result into list
-        std::vector<std::string> sourceList;
+        std::vector<std::pair<std::string, bool>> sourceList;
         auto ss = std::stringstream { externalSourcesString };
         for (std::string line; std::getline (ss, line, '\n');)
         {
-            sourceList.push_back (line);
+            try
+            {
+                auto tmp = SerialPort (line);
+                sourceList.push_back (std::make_pair (line, true));
+            } catch (const std::exception& e)
+            {
+                sourceList.push_back (std::make_pair (line, false));
+            }
         }
-        sourceList.insert (sourceList.begin() + MANUAL_SOURCE.first, MANUAL_SOURCE.second);
+        sourceList.insert (sourceList.begin() + MANUAL_SOURCE.first, std::make_pair (MANUAL_SOURCE.second, true));
         mAvailableSources.clear();
-        for (auto source : sourceList)
+        for (auto& source : sourceList)
         {
-            mAvailableSources.add (source);
+            mAvailableSources.push_back (std::make_pair (source.first, source.second));
         }
     } catch (const std::exception& e)
     {
         DBG ("Error updating available sources");
         DBG (e.what());
         mAvailableSources.clear();
-        mAvailableSources.insert (MANUAL_SOURCE.first, MANUAL_SOURCE.second);
+        mAvailableSources.insert (mAvailableSources.begin() + MANUAL_SOURCE.first, std::make_pair (MANUAL_SOURCE.second, true));
     }
 }
 void SpinRateManager::processBlock (int numSamples)

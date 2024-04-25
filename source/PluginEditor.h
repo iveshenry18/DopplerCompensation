@@ -32,6 +32,8 @@ private:
     // access the processor object that created it.
     PluginProcessor& audioProcessor;
 
+    void updateSpinRateSources();
+
     SpeakerVisualizationContainer speakerVisualizationContainer;
     juce::Slider mDiameterSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mDiameterSliderAttachment;
@@ -47,6 +49,10 @@ private:
     juce::Label mPhaseOffsetLabel;
     juce::ComboBox mSpinRateSourceSelector;
     juce::Label mSpinRateSourceSelectorLabel;
+    juce::Label mCurrentSpinRateLabel;
+    juce::Label mCurrentSpinRateValue;
+    juce::ToggleButton mInvertSpinRateButton;
+    juce::Label mInvertSpinRateLabel;
     juce::ToggleButton mTestModeButton;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> mTestModeButtonAttachment;
     juce::Label mTestModeLabel;
