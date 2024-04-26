@@ -18,7 +18,6 @@ struct SpinnerState
     float distanceToFocalPoint;
 };
 
-// TODO: consider Hall Effect Sensor
 class DopplerSpinner
 {
 public:

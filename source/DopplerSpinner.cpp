@@ -45,6 +45,7 @@ juce::Point<float> DopplerSpinner::getNextSpeakerPosition (bool incrementPhase)
     return { x, y };
 }
 
+// SOMETHING IN HERE IS RUSHING
 SpinnerState DopplerSpinner::getNextState (bool incrementPhase)
 {
     auto diameter = incrementPhase ? mSmoothedDiameter.getNextValue() : mSmoothedDiameter.getCurrentValue();
