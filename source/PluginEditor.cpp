@@ -13,21 +13,23 @@
 
 void PluginEditor::updateSpinRateSources()
 {
+    // Kinda ugly separation of responsibilities here
+    audioProcessor.getSpinRateManager()->updateAvailableSources();
     mSpinRateSourceSelector.clear();
-    auto sources = audioProcessor.getAvailableSpinRateSources();
+    auto sources = audioProcessor.getSpinRateManager()->getAvailableSources();
     for (int i = 0; i < sources.size(); i++)
     {
         mSpinRateSourceSelector.addItem (sources[i].first, i + 1);
         mSpinRateSourceSelector.setItemEnabled (i + 1, sources[i].second);
     }
-    mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateSource() + 1, juce::dontSendNotification);
+    mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateManager()->getSource() + 1, juce::dontSendNotification);
     mSpinRateSourceSelector.onChange = [this] {
         auto newSelectedId = mSpinRateSourceSelector.getSelectedId();
         DBG ("Setting Spin Rate Source To " + std::to_string (newSelectedId));
-        audioProcessor.setSpinRateSource (newSelectedId - 1);
+        audioProcessor.getSpinRateManager()->setSource (newSelectedId - 1);
     };
-    audioProcessor.setOnSpinRateSourceChange ([this] {
-        mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateSource() + 1, juce::dontSendNotification);
+    audioProcessor.getSpinRateManager()->setOnSourceChange ([this] {
+        mSpinRateSourceSelector.setSelectedId (audioProcessor.getSpinRateManager()->getSource() + 1, juce::dontSendNotification);
     });
 }
 
@@ -92,6 +94,11 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     mCurrentSpinRateValue.setText (juce::String (audioProcessor.getSpinRateManager()->getSpinRate()), juce::dontSendNotification);
     mCurrentSpinRateValue.setFont (juce::Font (juce::Font::getDefaultMonospacedFontName(), 15.0f, juce::Font::plain));
 
+    mRefreshSpinRateSourcesButton.setButtonText ("Refresh"); // TODO: Refresh symbol (↻)
+    mRefreshSpinRateSourcesButton.onClick = [this] {
+        updateSpinRateSources();
+    };
+
     mSpinRateSourceSelectorLabel.setText ("Spin Rate Source", juce::dontSendNotification);
     mSpinRateSourceSelectorLabel.setJustificationType (juce::Justification::right);
 
@@ -137,6 +144,7 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     addAndMakeVisible (speakerVisualizationContainer);
     addAndMakeVisible (mSpinRateSourceSelector);
     addAndMakeVisible (mSpinRateSourceSelectorLabel);
+    addAndMakeVisible (mRefreshSpinRateSourcesButton);
     setSize (800, 300);
 }
 
@@ -187,7 +195,8 @@ void PluginEditor::resized()
     auto spinRateSourceArea = bottomArea.removeFromLeft (bottomArea.getWidth());
     auto currentSpinRateArea = spinRateSourceArea.removeFromBottom (spinRateSourceArea.getHeight() / 3);
     auto invertSpinRateArea = spinRateSourceArea.removeFromBottom (spinRateSourceArea.getHeight() / 2);
-    mSpinRateSourceSelectorLabel.setBounds (spinRateSourceArea.removeFromLeft (spinRateSourceArea.getWidth() / 2));
+    mSpinRateSourceSelectorLabel.setBounds (spinRateSourceArea.removeFromLeft (spinRateSourceArea.getWidth() / 4));
+    mRefreshSpinRateSourcesButton.setBounds (spinRateSourceArea.removeFromLeft (spinRateSourceArea.getWidth() / 3));
     mSpinRateSourceSelector.setBounds (spinRateSourceArea.removeFromLeft (spinRateSourceArea.getWidth()));
 
     mInvertSpinRateLabel.setBounds (invertSpinRateArea.removeFromLeft (invertSpinRateArea.getWidth() / 2));

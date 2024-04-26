@@ -46,10 +46,9 @@ public:
     {
         invertSpinRate = invert;
     }
-
-private:
     void updateAvailableSources();
 
+private:
     int mCurrentPort = MANUAL_SOURCE.first;
     bool invertSpinRate = false;
     PluginProcessor* mPluginProcessor;

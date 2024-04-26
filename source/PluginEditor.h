@@ -48,6 +48,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mPhaseOffsetSliderAttachment;
     juce::Label mPhaseOffsetLabel;
     juce::ComboBox mSpinRateSourceSelector;
+    juce::TextButton mRefreshSpinRateSourcesButton;
     juce::Label mSpinRateSourceSelectorLabel;
     juce::Label mCurrentSpinRateLabel;
     juce::Label mCurrentSpinRateValue;

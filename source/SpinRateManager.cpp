@@ -55,7 +55,7 @@ void SpinRateManager::setSource (int source)
         {
             DBG ("Error opening serial port");
             DBG (e.what());
-            mPluginProcessor->setSpinRateSource (MANUAL_SOURCE.first);
+            mPluginProcessor->getSpinRateManager()->setSource (MANUAL_SOURCE.first);
             mCurrentPort = MANUAL_SOURCE.first;
             onSourceChange();
         }

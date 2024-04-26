@@ -72,23 +72,6 @@ public:
         return *mValueTreeState;
     }
 
-    std::vector<std::pair<juce::String, bool>> getAvailableSpinRateSources()
-    {
-        return mSpinRateManager.getAvailableSources();
-    }
-
-    void setSpinRateSource (int source)
-    {
-        mSpinRateManager.setSource (source);
-    }
-    int getSpinRateSource()
-    {
-        return mSpinRateManager.getSource();
-    }
-    void setOnSpinRateSourceChange (std::function<void()> fn)
-    {
-        mSpinRateManager.setOnSourceChange (fn);
-    }
     SpinRateManager* getSpinRateManager()
     {
         return &mSpinRateManager;
