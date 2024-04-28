@@ -112,15 +112,11 @@ void SpinRateManager::readValues()
 {
     if (mSerialPort == nullptr)
     {
-        DBG ("Manual value");
-        DBG (mManualSpinRate->get());
         mSmoothedSpinRate.setTargetValue (mManualSpinRate->get());
     }
     else
     {
         auto line = mSerialPort->readLastLine();
-        DBG ("Read Line");
-        DBG (line);
         if (!line.empty())
         {
             try

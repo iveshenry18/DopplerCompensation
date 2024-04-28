@@ -79,7 +79,7 @@ public:
 
     DopplerSpinner* getDopplerSpinner()
     {
-        return &dopplerSpinner;
+        return &mDopplerSpinner;
     }
 
 private:
@@ -101,7 +101,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState> mValueTreeState;
     void _constructValueTreeStates();
 
-    DopplerSpinner dopplerSpinner;
+    DopplerSpinner mDopplerSpinner;
     juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLine = juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> (MAX_DELAY_IN_SAMPLES);
 
     //==============================================================================

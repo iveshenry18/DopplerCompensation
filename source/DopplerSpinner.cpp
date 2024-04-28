@@ -4,53 +4,64 @@
 
 #include "DopplerSpinner.h"
 
-void DopplerSpinner::prepareToPlay (double sampleRate)
+void DopplerSpinner::initTimer (double updateRateHz)
 {
-    mSampleRate = sampleRate;
-    mSmoothedDiameter.reset (sampleRate, 0.1);
-    mSmoothedDistanceToFocalPoint.reset (sampleRate, 0.1);
-    mSmoothedPhaseOffset.reset (sampleRate, 0.1);
-    mSmoothedSpinRate.reset (sampleRate, 0.1);
+    float intervalMs = 1000.f / updateRateHz;
+    jassert(juce::approximatelyEqual(round(intervalMs), intervalMs));
+    startTimer(round(intervalMs));
+    mSmoothedDiameter.reset (updateRateHz, 0.1);
+    mSmoothedDistanceToFocalPoint.reset (updateRateHz, 0.1);
+    mSmoothedPhaseOffset.reset (updateRateHz, 0.1);
+    mSmoothedSpinRate.reset (updateRateHz, 0.1);
 }
 
-void DopplerSpinner::updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset, double sampleRate)
+// Consider thread-safety here
+void DopplerSpinner::updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset)
 {
     mSmoothedDiameter.setTargetValue (diameter);
     mSmoothedDistanceToFocalPoint.setTargetValue (distanceToFocalPoint);
     mSmoothedSpinRate.setTargetValue (spinRate);
     mSmoothedPhaseOffset.setTargetValue (phaseOffset);
-    mSampleRate = sampleRate;
 }
 
-juce::Point<float> DopplerSpinner::getNextSpeakerPosition (bool incrementPhase)
+/**
+ * Assumed to be called once per update—otherwise the smoothed parameters will not
+ * be changed at the correct rate.
+ */
+juce::Point<float> DopplerSpinner::getNextSpeakerPosition()
 {
     auto diameter = mSmoothedDiameter.getCurrentValue();
     auto spinnerRadius = diameter / 2;
-    auto spinRate = incrementPhase ? mSmoothedSpinRate.getNextValue() : mSmoothedSpinRate.getCurrentValue();
-    auto phaseOffset = incrementPhase ? mSmoothedPhaseOffset.getNextValue() : mSmoothedPhaseOffset.getCurrentValue();
+    auto spinRate = mSmoothedSpinRate.getNextValue();
+    auto phaseOffset = mSmoothedPhaseOffset.getNextValue();
     float finalPhase = mPhase + (phaseOffset / 100.f);
     float y = spinnerRadius * -sin (juce::MathConstants<float>::twoPi * finalPhase);
     float x = spinnerRadius * cos (juce::MathConstants<float>::twoPi * finalPhase);
 
-    if (incrementPhase)
+    float updateRateHz = 1000.f / getTimerInterval();
+    float phaseIncrement = spinRate / updateRateHz;
+    mPhase = mPhase + phaseIncrement;
+    if (mPhase > 1)
     {
-        auto phaseIncrement = static_cast<float> (spinRate / mSampleRate);
-        mPhase = mPhase + phaseIncrement;
-        if (mPhase > 1)
-        {
-            mPhase -= 1;
-        }
+        mPhase -= 1;
     }
 
     return { x, y };
 }
 
-// SOMETHING IN HERE IS RUSHING
-SpinnerState DopplerSpinner::getNextState (bool incrementPhase)
+SpinnerState DopplerSpinner::getCurrentState()
 {
-    auto diameter = incrementPhase ? mSmoothedDiameter.getNextValue() : mSmoothedDiameter.getCurrentValue();
+    return mCurrentState;
+}
+
+/**
+ * Update spinner state
+ */
+void DopplerSpinner::hiResTimerCallback()
+{
+    auto diameter = mSmoothedDiameter.getNextValue();
     auto spinnerRadius = diameter / 2;
-    auto distanceToFocalPoint = incrementPhase ? mSmoothedDistanceToFocalPoint.getNextValue() : mSmoothedDistanceToFocalPoint.getCurrentValue();
+    auto distanceToFocalPoint = mSmoothedDistanceToFocalPoint.getNextValue();
 
     // Compute Delay Time
     // (All positions in meters)
@@ -59,15 +70,15 @@ SpinnerState DopplerSpinner::getNextState (bool incrementPhase)
 
     float phantomSpeakerDist = phantomSpeakerPosition.getDistanceFrom (focalPointPosition);
 
-    juce::Point<float> speakerPosition = getNextSpeakerPosition (incrementPhase);
+    juce::Point<float> speakerPosition = getNextSpeakerPosition();
     float realSpeakerDist = speakerPosition.getDistanceFrom (focalPointPosition);
     float distDelta = phantomSpeakerDist - realSpeakerDist;
     float timeDelta = distDelta / SPEED_OF_SOUND_MS;
 
     auto gainFactor = static_cast<float> (pow (realSpeakerDist, 2) / pow (phantomSpeakerDist, 2));
 
-    bool isClicking = phantomSpeakerPosition.getDistanceFrom (speakerPosition) < diameter / 1000.f;
-    return SpinnerState {
+    bool isClicking = phantomSpeakerPosition.getDistanceFrom (speakerPosition) < diameter / 200.f;
+    mCurrentState = SpinnerState {
         timeDelta,
         gainFactor,
         speakerPosition,

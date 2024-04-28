@@ -36,12 +36,18 @@ PluginProcessor::PluginProcessor() :
 
     mSpinRateManager.updateParams();
     mSpinRateManager.startTimer (100);
+
+    mDopplerSpinner.initTimer (1000);
 }
 
 PluginProcessor::~PluginProcessor()
 {
     mSpinRateManager.stopTimer();
-};
+    if (mDopplerSpinner.isTimerRunning())
+    {
+        mDopplerSpinner.stopTimer();
+    }
+}
 
 //==============================================================================
 void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -52,7 +58,6 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     mSamplesPerBlock = samplesPerBlock;
     mTimeInSamples = 0;
 
-    dopplerSpinner.prepareToPlay (sampleRate);
     mSpinRateManager.prepareToPlay (sampleRate);
 
     delayLine.prepare ({ sampleRate,
@@ -63,16 +68,15 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     mSpinRateManager.processBlock (buffer.getNumSamples());
-    dopplerSpinner.updateParams (
+    mDopplerSpinner.updateParams (
         mDiameter->get(),
         mDistanceToFocalPoint->get(),
         mSpinRateManager.getSpinRate(),
-        mPhaseOffset->get(),
-        mSampleRate);
+        mPhaseOffset->get());
 
     for (auto sample_idx = 0; sample_idx < buffer.getNumSamples(); sample_idx++)
     {
-        SpinnerState spinnerState = dopplerSpinner.getNextState();
+        SpinnerState spinnerState = mDopplerSpinner.getCurrentState();
 
         for (int channel_idx = 0; channel_idx < buffer.getNumChannels(); channel_idx++)
         {

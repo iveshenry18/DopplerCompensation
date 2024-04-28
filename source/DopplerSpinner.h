@@ -18,24 +18,22 @@ struct SpinnerState
     float distanceToFocalPoint;
 };
 
-class DopplerSpinner
+class DopplerSpinner: public juce::HighResolutionTimer
 {
 public:
-    void prepareToPlay (double sampleRate);
-    void updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset, double sampleRate);
-    /**
-     * Gets the next state of the spinner
-     * @param incrementPhase when true, smoothed values and the spinner's position is updated.
-     */
-    SpinnerState getNextState (bool incrementPhase = true);
+    void initTimer (double updateRateHz);
+    void updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset);
+    void hiResTimerCallback() override;
+    SpinnerState getCurrentState();
 
 private:
     juce::SmoothedValue<float> mSmoothedDiameter = 0;
     juce::SmoothedValue<float> mSmoothedDistanceToFocalPoint = 0;
     juce::SmoothedValue<float> mSmoothedSpinRate = 0;
     juce::SmoothedValue<float> mSmoothedPhaseOffset = 0;
-    double mSampleRate = 44100;
 
-    juce::Point<float> getNextSpeakerPosition (bool incrementPhase = true);
+    SpinnerState mCurrentState;
+
+    juce::Point<float> getNextSpeakerPosition ();
     float mPhase = 0;
 };

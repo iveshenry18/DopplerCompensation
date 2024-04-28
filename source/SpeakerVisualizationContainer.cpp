@@ -42,7 +42,7 @@ void SpeakerVisualizationContainer::drawGridlines (juce::Graphics& g)
 
 void SpeakerVisualizationContainer::paint (juce::Graphics& g)
 {
-    SpinnerState spinnerState = mDopplerSpinner->getNextState (false);
+    SpinnerState spinnerState = mDopplerSpinner->getCurrentState();
     g.fillAll (juce::Colours::whitesmoke);
     auto physicalBounds = juce::Rectangle<float> {}.withCentre ({ 0, 0 }).withSizeKeepingCentre (spinnerState.spinnerDiameter * 1.1, std::max (spinnerState.spinnerDiameter / 2, spinnerState.distanceToFocalPoint) * 2.4);
     mPhysicalToViewport.setPhysicalBounds (physicalBounds);
