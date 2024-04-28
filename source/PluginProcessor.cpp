@@ -37,7 +37,12 @@ PluginProcessor::PluginProcessor() :
     mSpinRateManager.updateParams();
     mSpinRateManager.startTimer (100);
 
-    mDopplerSpinner.initTimer (1000);
+    mDopplerSpinner.init (1000);
+    mDopplerSpinner.updateParams (
+        mDiameter->get(),
+        mDistanceToFocalPoint->get(),
+        mSpinRateManager.getSpinRate(),
+        mPhaseOffset->get());
 }
 
 PluginProcessor::~PluginProcessor()

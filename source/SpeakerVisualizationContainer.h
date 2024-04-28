@@ -26,6 +26,7 @@ private:
     juce::Rectangle<float> mCircumference;
     juce::Rectangle<float> mFocalPointHead;
     juce::Rectangle<float> mFocalPointBody;
+    juce::Label mErrorMessage;
     PhysicalToViewport mPhysicalToViewport;
     DopplerSpinner* mDopplerSpinner;
 };

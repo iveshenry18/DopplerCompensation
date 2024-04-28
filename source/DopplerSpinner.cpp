@@ -4,7 +4,7 @@
 
 #include "DopplerSpinner.h"
 
-void DopplerSpinner::initTimer (double updateRateHz)
+void DopplerSpinner::init (double updateRateHz)
 {
     float intervalMs = 1000.f / updateRateHz;
     jassert(juce::approximatelyEqual(round(intervalMs), intervalMs));

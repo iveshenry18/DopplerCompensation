@@ -21,15 +21,15 @@ struct SpinnerState
 class DopplerSpinner: public juce::HighResolutionTimer
 {
 public:
-    void initTimer (double updateRateHz);
+    void init (double updateRateHz);
     void updateParams (float diameter, float distanceToFocalPoint, float spinRate, float phaseOffset);
     void hiResTimerCallback() override;
     SpinnerState getCurrentState();
 
 private:
-    juce::SmoothedValue<float> mSmoothedDiameter = 0;
-    juce::SmoothedValue<float> mSmoothedDistanceToFocalPoint = 0;
-    juce::SmoothedValue<float> mSmoothedSpinRate = 0;
+    juce::SmoothedValue<float> mSmoothedDiameter = 1;
+    juce::SmoothedValue<float> mSmoothedDistanceToFocalPoint = 1;
+    juce::SmoothedValue<float> mSmoothedSpinRate = 1;
     juce::SmoothedValue<float> mSmoothedPhaseOffset = 0;
 
     SpinnerState mCurrentState;
