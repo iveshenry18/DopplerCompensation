@@ -11,7 +11,7 @@
 class SpeakerVisualizationContainer : public juce::Component, public juce::Timer
 {
 public:
-    SpeakerVisualizationContainer (DopplerSpinner* dopplerSpinner);
+    explicit SpeakerVisualizationContainer (DopplerSpinner* dopplerSpinner);
     ~SpeakerVisualizationContainer() override;
     void paint (juce::Graphics& g) override;
     void resized() override;

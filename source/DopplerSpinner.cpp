@@ -3,16 +3,19 @@
 //
 
 #include "DopplerSpinner.h"
+#include "PluginProcessor.h"
 
-void DopplerSpinner::init (double updateRateHz)
+void DopplerSpinner::prepareToPlay (double sampleRate)
 {
-    float intervalMs = 1000.f / updateRateHz;
-    jassert(juce::approximatelyEqual(round(intervalMs), intervalMs));
-    startTimer(round(intervalMs));
-    mSmoothedDiameter.reset (updateRateHz, 0.1);
-    mSmoothedDistanceToFocalPoint.reset (updateRateHz, 0.1);
-    mSmoothedPhaseOffset.reset (updateRateHz, 0.1);
-    mSmoothedSpinRate.reset (updateRateHz, 0.1);
+    // To avoid noise in the delay time, we filter out any frequencies 10x above the max spin rate.
+    iir.reset();
+    iir.setCoefficients(juce::IIRCoefficients::makeLowPass(sampleRate, MAX_SPIN_RATE * 10));
+
+    mUpdateRateHz = sampleRate;
+    mSmoothedDiameter.reset (sampleRate, 0.1);
+    mSmoothedDistanceToFocalPoint.reset (sampleRate, 0.1);
+    mSmoothedPhaseOffset.reset (sampleRate, 0.1);
+    mSmoothedSpinRate.reset (sampleRate, 0.1);
 }
 
 // Consider thread-safety here
@@ -38,8 +41,7 @@ juce::Point<float> DopplerSpinner::getNextSpeakerPosition()
     float y = spinnerRadius * -sin (juce::MathConstants<float>::twoPi * finalPhase);
     float x = spinnerRadius * cos (juce::MathConstants<float>::twoPi * finalPhase);
 
-    float updateRateHz = 1000.f / getTimerInterval();
-    float phaseIncrement = spinRate / updateRateHz;
+    float phaseIncrement = spinRate / mUpdateRateHz;
     mPhase = mPhase + phaseIncrement;
     if (mPhase > 1)
     {
@@ -57,11 +59,11 @@ SpinnerState DopplerSpinner::getCurrentState()
 /**
  * Update spinner state
  */
-void DopplerSpinner::hiResTimerCallback()
+void DopplerSpinner::updateState()
 {
-    auto diameter = mSmoothedDiameter.getNextValue();
-    auto spinnerRadius = diameter / 2;
-    auto distanceToFocalPoint = mSmoothedDistanceToFocalPoint.getNextValue();
+    float diameter = mSmoothedDiameter.getNextValue();
+    float spinnerRadius = diameter / 2;
+    float distanceToFocalPoint = mSmoothedDistanceToFocalPoint.getNextValue();
 
     // Compute Delay Time
     // (All positions in meters)
@@ -74,6 +76,7 @@ void DopplerSpinner::hiResTimerCallback()
     float realSpeakerDist = speakerPosition.getDistanceFrom (focalPointPosition);
     float distDelta = phantomSpeakerDist - realSpeakerDist;
     float timeDelta = distDelta / SPEED_OF_SOUND_MS;
+    timeDelta = iir.processSingleSampleRaw(timeDelta);
 
     auto gainFactor = static_cast<float> (pow (realSpeakerDist, 2) / pow (phantomSpeakerDist, 2));
 

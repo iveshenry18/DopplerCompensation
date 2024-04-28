@@ -87,14 +87,11 @@ private:
     // If the host doesn't provide transport info, we need to keep track of sample time ourselves
     int mSamplesPerBlock = 512;
 
-    // Just so you know at 44.1kHz this will overflow if the program runs for 6.6 million years.
-    // It also happens to be exactly how the playhead behaves in standalone mode
-    int64_t mTimeInSamples = 0;
-
     juce::AudioParameterFloat* mDiameter = nullptr;
     juce::AudioParameterFloat* mDistanceToFocalPoint = nullptr;
     juce::AudioParameterFloat* mPhaseOffset = nullptr;
     juce::AudioParameterBool* mTestMode = nullptr;
+    juce::SmoothedValue<float> mSmoothedTimeDelta = 0;
 
     SpinRateManager mSpinRateManager;
 

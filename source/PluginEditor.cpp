@@ -35,7 +35,7 @@ void PluginEditor::updateSpinRateSources()
 
 //==============================================================================
 PluginEditor::PluginEditor (PluginProcessor& parent)
-    : AudioProcessorEditor (&parent), audioProcessor (parent), speakerVisualizationContainer (audioProcessor.getDopplerSpinner())
+    : AudioProcessorEditor (&parent), audioProcessor (parent), speakerVisualizationContainer (audioProcessor.getDopplerSpinner()), delayTimeVisualizationContainer (audioProcessor.getDopplerSpinner())
 {
     mDiameterSlider.setRange (0, 5);
     mDiameterSlider.setTextBoxStyle (juce::Slider::TextBoxBelow, true, 100, 20);
@@ -142,6 +142,7 @@ PluginEditor::PluginEditor (PluginProcessor& parent)
     addAndMakeVisible (mTestModeButton);
     addAndMakeVisible (mTestModeLabel);
     addAndMakeVisible (speakerVisualizationContainer);
+    addAndMakeVisible (delayTimeVisualizationContainer);
     addAndMakeVisible (mSpinRateSourceSelector);
     addAndMakeVisible (mSpinRateSourceSelectorLabel);
     addAndMakeVisible (mRefreshSpinRateSourcesButton);
@@ -177,7 +178,8 @@ void PluginEditor::resized()
     auto labelArea = bounds.removeFromTop (int (getHeight() * .2));
     auto bottomArea = bounds.removeFromBottom (int (getHeight() * .3));
 
-    speakerVisualizationContainer.setBounds (visualizerArea);
+    speakerVisualizationContainer.setBounds (visualizerArea.removeFromTop (visualizerArea.getHeight() * 0.8));
+    delayTimeVisualizationContainer.setBounds (visualizerArea);
 
     mDiameterSlider.setBounds (knobArea.removeFromLeft (knobArea.getWidth() / 4));
     mDistanceToFocalPointSlider.setBounds (knobArea.removeFromLeft (knobArea.getWidth() / 3));

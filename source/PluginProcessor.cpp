@@ -36,22 +36,11 @@ PluginProcessor::PluginProcessor() :
 
     mSpinRateManager.updateParams();
     mSpinRateManager.startTimer (100);
-
-    mDopplerSpinner.init (1000);
-    mDopplerSpinner.updateParams (
-        mDiameter->get(),
-        mDistanceToFocalPoint->get(),
-        mSpinRateManager.getSpinRate(),
-        mPhaseOffset->get());
 }
 
 PluginProcessor::~PluginProcessor()
 {
     mSpinRateManager.stopTimer();
-    if (mDopplerSpinner.isTimerRunning())
-    {
-        mDopplerSpinner.stopTimer();
-    }
 }
 
 //==============================================================================
@@ -61,13 +50,19 @@ void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     jassert (samplesPerBlock >= 0);
     jassert (samplesPerBlock <= 4096);
     mSamplesPerBlock = samplesPerBlock;
-    mTimeInSamples = 0;
-
     mSpinRateManager.prepareToPlay (sampleRate);
 
     delayLine.prepare ({ sampleRate,
         static_cast<juce::uint32> (samplesPerBlock),
         static_cast<juce::uint32> (getTotalNumInputChannels()) });
+
+    mDopplerSpinner.prepareToPlay (sampleRate);
+    mDopplerSpinner.updateParams (
+        mDiameter->get(),
+        mDistanceToFocalPoint->get(),
+        mSpinRateManager.getSpinRate(),
+        mPhaseOffset->get());
+
 }
 
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -81,6 +76,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
 
     for (auto sample_idx = 0; sample_idx < buffer.getNumSamples(); sample_idx++)
     {
+        mDopplerSpinner.updateState();
         SpinnerState spinnerState = mDopplerSpinner.getCurrentState();
 
         for (int channel_idx = 0; channel_idx < buffer.getNumChannels(); channel_idx++)
@@ -111,9 +107,6 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Midi
             }
         }
     }
-
-    // Update current time (if host doesn't provide time)
-    mTimeInSamples += mSamplesPerBlock;
 }
 
 //==============================================================================

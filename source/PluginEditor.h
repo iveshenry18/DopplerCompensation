@@ -10,6 +10,7 @@
 
 #include "PluginProcessor.h"
 #include "SpeakerVisualizationContainer.h"
+#include "DelayTimeVisualizationContainer.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 typedef juce::AudioProcessorValueTreeState::SliderAttachment SliderAttachment;
@@ -35,6 +36,8 @@ private:
     void updateSpinRateSources();
 
     SpeakerVisualizationContainer speakerVisualizationContainer;
+    DelayTimeVisualizationContainer delayTimeVisualizationContainer;
+
     juce::Slider mDiameterSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mDiameterSliderAttachment;
     juce::Label mDiameterLabel;
