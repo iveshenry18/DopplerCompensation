@@ -2,6 +2,8 @@
 
 A tunable delay-based plugin to compensate for the Doppler effect.
 
+MacOS-only (for now).
+
 ## Building
 
 Follow Pamplejuce instructions below.
